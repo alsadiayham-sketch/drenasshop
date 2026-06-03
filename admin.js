@@ -791,21 +791,38 @@ async function saveHeroSlide() {
     var subtitle = document.getElementById('heroSlideSubtitle').value.trim();
     var order = parseInt(document.getElementById('heroSlideOrder').value) || 1;
 
-    // Check if file uploaded
+    // Check if file uploaded (image)
     var fileInput = document.getElementById('heroSlideFile');
-    if (fileInput.files && fileInput.files[0] && !url) {
+    if (fileInput.files && fileInput.files[0]) {
         var file = fileInput.files[0];
-        var reader = new FileReader();
-        reader.onload = async function(e) {
-            var dataUrl = e.target.result;
-            await saveHeroSlideData(id, { type: type, url: dataUrl, title: title, subtitle: subtitle, order: order });
-        };
-        reader.readAsDataURL(file);
+        setAdminLoading(true);
+        setAdminStatus('جاري رفع الصورة...', 'info');
+        try {
+            var imgbbUrl = await uploadToImgbb(file);
+            await saveHeroSlideData(id, { type: 'image', url: imgbbUrl, title: title, subtitle: subtitle, order: order });
+        } catch (err) {
+            console.error(err);
+            setAdminStatus('فشل رفع الصورة: ' + err.message, 'error');
+            setAdminLoading(false);
+        }
         return;
     }
 
-    if (!url) { alert('يرجى إدخال رابط الصورة أو الفيديو'); return; }
+    if (!url) { alert('يرجى إدخال رابط أو رفع صورة'); return; }
     await saveHeroSlideData(id, { type: type, url: url, title: title, subtitle: subtitle, order: order });
+}
+
+async function uploadToImgbb(file) {
+    var IMGBB_API_KEY = 'd14f65fb697224837b49489e5f8d8b57';
+    var formData = new FormData();
+    formData.append('image', file);
+    var response = await fetch('https://api.imgbb.com/1/upload?key=' + IMGBB_API_KEY, {
+        method: 'POST',
+        body: formData
+    });
+    var data = await response.json();
+    if (!data.success) throw new Error(data.error ? data.error.message : 'Upload failed');
+    return data.data.url;
 }
 
 async function saveHeroSlideData(id, data) {
@@ -874,5 +891,11 @@ function previewHeroMedia(input) {
 }
 
 function toggleHeroMediaField() {
-    // No special action needed for now
+    var type = document.getElementById('heroSlideType').value;
+    var uploadGroup = document.getElementById('heroImageUploadGroup');
+    if (type === 'video') {
+        uploadGroup.style.display = 'none';
+    } else {
+        uploadGroup.style.display = '';
+    }
 }
