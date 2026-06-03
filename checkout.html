@@ -336,13 +336,26 @@
         }
 
         function getDeliveryCost() {
-            return selectedDelivery === 'pickup' ? 0 : (DELIVERY_COSTS[selectedRegion] || 0);
+            if (selectedDelivery === 'pickup') return 0;
+            var baseCost = DELIVERY_COSTS[selectedRegion] || 0;
+            // Check for free delivery discount
+            var subtotal = getSubtotal();
+            for (var i = 0; i < discounts.length; i++) {
+                var d = discounts[i];
+                if (d.type === 'free_delivery' && subtotal >= (d.minAmount || 0)) {
+                    var now = new Date().toISOString().slice(0, 10);
+                    if (!d.expiresAt || d.expiresAt >= now) return 0;
+                }
+            }
+            return baseCost;
         }
 
         function getDeliveryCostLabel() {
             if (selectedDelivery === 'pickup') return 'مجاني (استلام ذاتي)';
             if (!selectedRegion) return 'اختاري المنطقة';
-            return formatCurrency(getDeliveryCost()) + ' (' + DELIVERY_LABELS[selectedRegion] + ')';
+            var cost = getDeliveryCost();
+            if (cost === 0 && selectedDelivery !== 'pickup') return 'مجاني 🎉 (توصيل مجاني)';
+            return formatCurrency(cost) + ' (' + DELIVERY_LABELS[selectedRegion] + ')';
         }
 
         function getTotal() {

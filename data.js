@@ -52,10 +52,11 @@ function normalizeDiscount(discount) {
     }
     return {
         id: String(discount && discount.id ? discount.id : Date.now()),
-        type: ['brand', 'category', 'manual', 'all'].indexOf(discount && discount.type) >= 0 ? discount.type : 'manual',
+        type: ['brand', 'category', 'manual', 'all', 'free_delivery'].indexOf(discount && discount.type) >= 0 ? discount.type : 'manual',
         value: values.join(', '),
         values: values,
         percentage: Number(discount && discount.percentage) || 0,
+        minAmount: Number(discount && discount.minAmount) || 0,
         description: String(discount && discount.description ? discount.description : '').trim(),
         expiresAt: discount && discount.expiresAt ? discount.expiresAt : ''
     };

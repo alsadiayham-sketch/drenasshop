@@ -1919,12 +1919,12 @@ body.has-combo-banner .mobile-menu { top: calc(62px + 36px); }
     align-items: center;
     justify-content: center;
     gap: 10px;
-    animation: comboScroll 15s linear infinite;
+    animation: comboScroll 25s linear infinite;
     white-space: nowrap;
 }
 @keyframes comboScroll {
-    0% { transform: translateX(100%); }
-    100% { transform: translateX(-100%); }
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
 }
 .combo-banner-icon { font-size: 1.1rem; }
 .combo-banner-text { font-size: 0.85rem; font-weight: 600; }
@@ -1947,10 +1947,15 @@ body.has-combo-banner .mobile-menu { top: calc(62px + 36px); }
 
 /* ===== Combo Modal ===== */
 .combo-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 2000;
+    padding: 20px;
+    backdrop-filter: blur(4px);
 }
 .combo-modal {
     background: white;

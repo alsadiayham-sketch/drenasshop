@@ -396,6 +396,8 @@ function toggleDiscountValueField() {
     var type = document.getElementById('discountType').value;
     document.getElementById('discountValueGroup').style.display = (type === 'brand' || type === 'category') ? 'block' : 'none';
     document.getElementById('discountManualGroup').style.display = type === 'manual' ? 'block' : 'none';
+    document.getElementById('discountMinAmountGroup').style.display = type === 'free_delivery' ? 'block' : 'none';
+    document.getElementById('discountPercentageGroup').style.display = type === 'free_delivery' ? 'none' : 'block';
     if (type === 'brand' || type === 'category') renderDiscountValueOptions();
 }
 
@@ -405,7 +407,7 @@ function renderDiscountsTable() {
         tbody.innerHTML = '<tr><td colspan="6" class="empty-state">لا توجد خصومات مضافة.</td></tr>';
         return;
     }
-    var typeLabels = { brand: 'ماركة', category: 'فئة', manual: 'يدوي', all: 'جميع المنتجات' };
+    var typeLabels = { brand: 'ماركة', category: 'فئة', manual: 'يدوي', all: 'جميع المنتجات', free_delivery: 'توصيل مجاني' };
     var now = new Date().toISOString().slice(0, 10);
     tbody.innerHTML = discounts.map(function (discount) {
         var expired = discount.expiresAt && discount.expiresAt < now;
@@ -429,6 +431,7 @@ function openDiscountModal(discount) {
         }
     }
     document.getElementById('discountManualValue').value = discount && discount.type === 'manual' ? discount.value : '';
+    document.getElementById('discountMinAmount').value = discount && discount.minAmount ? discount.minAmount : '';
     document.getElementById('discountPercentage').value = discount ? discount.percentage : '';
     document.getElementById('discountExpiry').value = discount ? (discount.expiresAt || '') : '';
     document.getElementById('discountDescription').value = discount ? discount.description : '';
@@ -454,6 +457,8 @@ async function saveDiscount(event) {
     } else if (type === 'manual') {
         var manualVal = document.getElementById('discountManualValue').value.trim();
         if (manualVal) values = [manualVal];
+    } else if (type === 'free_delivery') {
+        values = [];
     }
     // For "all" type, values stays empty (applies to everything)
     var discountData = normalizeDiscount({
@@ -461,7 +466,8 @@ async function saveDiscount(event) {
         type: type,
         values: values,
         value: values.join(', '),
-        percentage: parseInt(document.getElementById('discountPercentage').value || '0', 10),
+        percentage: type === 'free_delivery' ? 0 : parseInt(document.getElementById('discountPercentage').value || '0', 10),
+        minAmount: type === 'free_delivery' ? parseInt(document.getElementById('discountMinAmount').value || '0', 10) : 0,
         description: document.getElementById('discountDescription').value.trim(),
         expiresAt: document.getElementById('discountExpiry').value || ''
     });

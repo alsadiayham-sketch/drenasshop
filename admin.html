@@ -189,10 +189,11 @@
             <h3 id="discountModalTitle">إضافة خصم</h3>
             <form onsubmit="event.preventDefault(); saveDiscount(event)">
                 <input type="hidden" id="discountId">
-                <div class="form-group"><label>نوع الخصم</label><select id="discountType" onchange="toggleDiscountValueField()"><option value="all">على جميع المنتجات</option><option value="brand">حسب الماركة</option><option value="category">حسب الفئة</option><option value="manual">يدوي</option></select></div>
+                <div class="form-group"><label>نوع الخصم</label><select id="discountType" onchange="toggleDiscountValueField()"><option value="all">على جميع المنتجات</option><option value="brand">حسب الماركة</option><option value="category">حسب الفئة</option><option value="manual">يدوي</option><option value="free_delivery">توصيل مجاني</option></select></div>
                 <div class="form-group" id="discountValueGroup" style="display:none;"><label>اختاري (يمكن اختيار أكثر من واحد)</label><div id="discountValueCheckboxes" class="checkbox-list"></div></div>
                 <div class="form-group" id="discountManualGroup" style="display:none;"><label>عنوان يدوي</label><input type="text" id="discountManualValue" placeholder="مثال: خصم موسمي"></div>
-                <div class="form-group"><label>نسبة الخصم (%)</label><input type="number" id="discountPercentage" min="0" max="99" required></div>
+                                <div class="form-group" id="discountMinAmountGroup" style="display:none;"><label>الحد الأدنى للطلب (₪)</label><input type="number" id="discountMinAmount" min="0" placeholder="مثال: 100"></div>
+                                <div class="form-group" id="discountPercentageGroup"><label>نسبة الخصم (%)</label><input type="number" id="discountPercentage" min="0" max="99"></div>
                 <div class="form-group"><label>تاريخ الانتهاء (اختياري)</label><input type="date" id="discountExpiry"></div>
                 <div class="form-group"><label>وصف الخصم (يظهر في البانر)</label><input type="text" id="discountDescription" placeholder="خصم 20% على جميع منتجات..." required></div>
                 <div class="modal-actions"><button type="submit" class="btn-save">حفظ</button><button type="button" class="btn-cancel" onclick="closeModal('discountModal')">إلغاء</button></div>

@@ -203,6 +203,7 @@ function renderStorefront() {
     applySettings();
     renderFilters();
     checkDiscountBanner();
+    renderComboBanner();
     updateCartBadge();
     renderProducts(getFilteredProducts(currentFilter));
     updateCheckoutLink(updateCartTotal());
@@ -1192,13 +1193,24 @@ function startHeroSlideTimer(slides) {
 function renderComboBanner() {
     var banner = document.getElementById('comboBanner');
     if (!banner) return;
-    if (comboOffers.length === 0) {
+
+    // Collect combo offer texts
+    var texts = comboOffers.map(function(o) { return '🔥 ' + (o.title || 'عرض خاص!'); });
+
+    // Collect active discount texts
+    var now = new Date().toISOString().slice(0, 10);
+    discounts.forEach(function(d) {
+        if (!d.description) return;
+        if (d.expiresAt && d.expiresAt < now) return;
+        texts.push('🏷️ ' + d.description);
+    });
+
+    if (texts.length === 0) {
         banner.style.display = 'none';
         document.body.classList.remove('has-combo-banner');
         return;
     }
-    var texts = comboOffers.map(function(o) { return '🔥 ' + (o.title || 'عرض خاص!'); }).join('   •   ');
-    document.getElementById('comboBannerText').textContent = texts;
+    document.getElementById('comboBannerText').textContent = texts.join('   •   ');
     banner.style.display = 'block';
     document.body.classList.add('has-combo-banner');
 }
