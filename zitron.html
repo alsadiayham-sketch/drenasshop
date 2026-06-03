@@ -283,7 +283,7 @@
 </nav>
 
 <!-- Hero Slider -->
-<section class="hero">
+<section class="hero" id="heroSection">
     <div class="hero-slide active">
         <img src="https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=1400&h=600&fit=crop" alt="Skincare">
         <div class="hero-overlay">
@@ -294,30 +294,8 @@
             </div>
         </div>
     </div>
-    <div class="hero-slide">
-        <img src="https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=1400&h=600&fit=crop" alt="Beauty">
-        <div class="hero-overlay">
-            <div class="hero-content">
-                <h1>جمال طبيعي، نتائج مذهلة</h1>
-                <p>أفضل سيرومات وكريمات الحماية من الشمس</p>
-                <button class="hero-btn" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">اكتشفي المزيد</button>
-            </div>
-        </div>
-    </div>
-    <div class="hero-slide">
-        <img src="https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=1400&h=600&fit=crop" alt="Products">
-        <div class="hero-overlay">
-            <div class="hero-content">
-                <h1>K-Beauty الأصلية</h1>
-                <p>منتجات كورية أصلية بأسعار تنافسية</p>
-                <button class="hero-btn" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">تصفحي الآن</button>
-            </div>
-        </div>
-    </div>
-    <div class="hero-dots">
-        <button class="hero-dot active" onclick="goSlide(0)"></button>
-        <button class="hero-dot" onclick="goSlide(1)"></button>
-        <button class="hero-dot" onclick="goSlide(2)"></button>
+    <div class="hero-dots" id="heroDots"></div>
+</section>
     </div>
 </section>
 
@@ -584,22 +562,58 @@ db.collection('products').get().then(function(snap) {
     renderProducts(products);
 }).catch(function(err) { console.error('Error:', err); });
 
-// Hero slider
+// Hero slider from Firestore
 var slideIndex = 0;
-var slides = document.querySelectorAll('.hero-slide');
-var dots = document.querySelectorAll('.hero-dot');
+var heroSection = document.getElementById('heroSection');
+var heroDots = document.getElementById('heroDots');
+
+db.collection('heroDisplay').orderBy('order', 'asc').get().then(function(snap) {
+    if (snap.empty) return;
+    var slides = [];
+    snap.forEach(function(doc) { slides.push(doc.data()); });
+
+    heroSection.innerHTML = slides.map(function(slide, idx) {
+        var media = slide.type === 'video'
+            ? '<video src="'+slide.url+'" muted playsinline'+(idx===0?' autoplay':'')+' style="width:100%;height:100%;object-fit:cover;" onended="goSlide('+ ((idx+1)%slides.length) +')"></video>'
+            : '<img src="'+slide.url+'" alt="'+(slide.title||'')+'">';
+        return '<div class="hero-slide'+(idx===0?' active':'')+'">' + media +
+            '<div class="hero-overlay"><div class="hero-content">' +
+            (slide.title ? '<h1>'+slide.title+'</h1>' : '') +
+            (slide.subtitle ? '<p>'+slide.subtitle+'</p>' : '') +
+            '<button class="hero-btn" onclick="document.getElementById(\'products\').scrollIntoView({behavior:\'smooth\'})">تسوقي الآن</button>' +
+            '</div></div></div>';
+    }).join('');
+
+    if (slides.length > 1) {
+        var dotsHTML = '<div class="hero-dots">' + slides.map(function(_, idx) {
+            return '<button class="hero-dot'+(idx===0?' active':'')+'" onclick="goSlide('+idx+')"></button>';
+        }).join('') + '</div>';
+        heroSection.insertAdjacentHTML('beforeend', dotsHTML);
+    }
+
+    // Auto-advance for image slides
+    setInterval(function() {
+        var allSlides = heroSection.querySelectorAll('.hero-slide');
+        if (allSlides.length <= 1) return;
+        var current = allSlides[slideIndex];
+        if (current && !current.querySelector('video')) {
+            goSlide((slideIndex + 1) % allSlides.length);
+        }
+    }, 5000);
+});
 
 function goSlide(n) {
-    slides[slideIndex].classList.remove('active');
-    dots[slideIndex].classList.remove('active');
+    var allSlides = heroSection.querySelectorAll('.hero-slide');
+    var allDots = heroSection.querySelectorAll('.hero-dot');
+    if (!allSlides.length) return;
+    allSlides[slideIndex].classList.remove('active');
+    if (allDots[slideIndex]) allDots[slideIndex].classList.remove('active');
     slideIndex = n;
-    slides[slideIndex].classList.add('active');
-    dots[slideIndex].classList.add('active');
+    allSlides[slideIndex].classList.add('active');
+    if (allDots[slideIndex]) allDots[slideIndex].classList.add('active');
+    var vid = allSlides[slideIndex].querySelector('video');
+    if (vid) { vid.currentTime = 0; vid.play(); }
 }
-
-setInterval(function() {
-    goSlide((slideIndex + 1) % slides.length);
-}, 5000);
 </script>
 </body>
 </html>
