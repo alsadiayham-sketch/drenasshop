@@ -56,6 +56,20 @@
             .product-card img { height: 200px; }
         }
             .product-card.hidden { display: none; } .filters-section { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 30px 30px 0; max-width: 1300px; margin: 0 auto; } .filter-btn { padding: 8px 18px; border-radius: 0; border: 1px solid #eee; background: transparent; cursor: pointer; font-family: inherit; font-size: 0.8rem; font-weight: 400; transition: all 0.3s; color: #999; } .filter-btn.active { background: #222; color: #fff; border-color: #222; } .filter-btn:hover { border-color: #222; }
+    
+        /* Dynamic Hero Slider */
+        .hero-slider { position: relative; width: 100%; min-height: 70vh; overflow: hidden; }
+        .hero-slider .hero-slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.8s ease; }
+        .hero-slider .hero-slide.active { opacity: 1; position: relative; }
+        .hero-slider .hero-slide img,
+        .hero-slider .hero-slide video { width: 100%; height: 70vh; object-fit: cover; display: block; }
+        .hero-slider .hero-slide-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; text-align: center; }
+        .hero-slider .hero-slide-text h2 { font-size: 2.5rem; color: #fff; margin-bottom: 10px; text-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+        .hero-slider .hero-slide-text p { font-size: 1.2rem; color: rgba(255,255,255,0.9); text-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+        .hero-dots-container { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 10; }
+        .hero-dots-container button { width: 10px; height: 10px; border-radius: 50%; border: none; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.3s; }
+        .hero-dots-container button.active { background: #fff; transform: scale(1.3); }
+
     </style>
 </head>
 <body>
@@ -67,10 +81,9 @@
         </div>
     </nav>
 
-    <section class="hero">
-        <div>
-            <h1>عناية بسيطة. نتائج مذهلة.</h1>
-            <p>منتجات عناية أساسية بدون تعقيد — فقط ما تحتاجه بشرتك</p>
+    <section class="hero-slider" id="heroSlider">
+        <div class="hero-slide active" style="background:linear-gradient(135deg,#1a2a3a,#2C8C99);height:70vh;display:flex;align-items:center;justify-content:center;">
+            <div class="hero-slide-overlay"><div class="hero-slide-text"><h2>جاري التحميل...</h2></div></div>
         </div>
     </section>
 
@@ -123,6 +136,56 @@
                 grid.innerHTML = html;
             }).catch(function(e) { grid.innerHTML = '<p class="loading">خطأ في التحميل</p>'; });
         })();
-    </script>
+    
+// Dynamic Hero Slider from Firestore
+var heroSlideIndex = 0;
+var heroContainer = document.getElementById('heroSlider');
+if (heroContainer) {
+    db.collection('heroDisplay').orderBy('order', 'asc').get().then(function(snap) {
+        if (snap.empty) return;
+        var slides = [];
+        snap.forEach(function(doc) { slides.push(doc.data()); });
+        var html = slides.map(function(slide, idx) {
+            var media = slide.type === 'video'
+                ? '<video src="'+slide.url+'" muted playsinline'+(idx===0?' autoplay':'')+' style="width:100%;height:70vh;object-fit:cover;" onended="goHeroSlide('+ ((idx+1)%slides.length) +')"><\/video>'
+                : '<img src="'+slide.url+'" alt="'+(slide.title||'')+'">';
+            return '<div class="hero-slide'+(idx===0?' active':'')+'">'+media+
+                '<div class="hero-slide-overlay"><div class="hero-slide-text">'+
+                (slide.title ? '<h2>'+slide.title+'<\/h2>' : '')+
+                (slide.subtitle ? '<p>'+slide.subtitle+'<\/p>' : '')+
+                '<\/div><\/div><\/div>';
+        }).join('');
+        if (slides.length > 1) {
+            html += '<div class="hero-dots-container">' + slides.map(function(_, idx) {
+                return '<button class="'+(idx===0?'active':'')+'" onclick="goHeroSlide('+idx+')"><\/button>';
+            }).join('') + '<\/div>';
+        }
+        heroContainer.innerHTML = html;
+        setInterval(function() {
+            var allSlides = heroContainer.querySelectorAll('.hero-slide');
+            if (allSlides.length <= 1) return;
+            var current = allSlides[heroSlideIndex];
+            if (current && !current.querySelector('video')) {
+                goHeroSlide((heroSlideIndex + 1) % allSlides.length);
+            }
+        }, 5000);
+    });
+}
+function goHeroSlide(n) {
+    var c = document.getElementById('heroSlider');
+    if (!c) return;
+    var allSlides = c.querySelectorAll('.hero-slide');
+    var allDots = c.querySelectorAll('.hero-dots-container button');
+    if (!allSlides.length) return;
+    allSlides[heroSlideIndex].classList.remove('active');
+    if (allDots[heroSlideIndex]) allDots[heroSlideIndex].classList.remove('active');
+    heroSlideIndex = n;
+    allSlides[heroSlideIndex].classList.add('active');
+    if (allDots[heroSlideIndex]) allDots[heroSlideIndex].classList.add('active');
+    var vid = allSlides[heroSlideIndex].querySelector('video');
+    if (vid) { vid.currentTime = 0; vid.play(); }
+}
+
+</script>
 </body>
 </html>
