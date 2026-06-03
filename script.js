@@ -695,7 +695,11 @@ function renderCustomPackageCartItem(item) {
 function getCartKnownTotal() {
     return cart.reduce(function (sum, item) {
         if (item.type === 'custom_package') return sum;
-        var product = products.find(function (entry) { return entry.id === item.id; });
+        // Combo items have their price pre-set (comboPrice / pickCount)
+        if (item.comboOfferId) return sum + (item.price * item.qty);
+        // Package items have their price pre-set
+        if (item.type === 'package') return sum + (item.price * item.qty);
+        var product = products.find(function (entry) { return String(entry.id) === String(item.id); });
         return product ? sum + getFinalPrice(product, item.sizeIdx, discounts).final * item.qty : sum;
     }, 0);
 }
@@ -1388,7 +1392,7 @@ function renderCartItems() {
         html += '<button class="cart-combo-edit" onclick="editCombo(\'' + offerId + '\')">تعديل</button></div>';
         html += '<div class="cart-combo-items">';
         group.items.forEach(function(item) {
-            var product = products.find(function(p) { return p.id === item.productId; });
+            var product = products.find(function(p) { return String(p.id) === String(item.productId); });
             if (product) {
                 html += '<div class="cart-combo-item"><img src="' + product.image + '" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">' + product.name + '</div>';
             }
@@ -1401,7 +1405,7 @@ function renderCartItems() {
     // Render package items
     packageItems.forEach(function(item) {
         var productNames = (item.packageProducts || []).map(function(pid) {
-            var p = products.find(function(pr) { return pr.id === pid; });
+            var p = products.find(function(pr) { return String(pr.id) === String(pid); });
             return p ? p.name : '';
         }).filter(Boolean).join('، ');
         html += '<div class="cart-item cart-package-item">';
@@ -1418,7 +1422,7 @@ function renderCartItems() {
 
     // Render regular items
     regularItems.forEach(function(item) {
-        var product = products.find(function(p) { return p.id === item.id; });
+        var product = products.find(function(p) { return String(p.id) === String(item.id); });
         if (!product) return;
         var sizeData = product.sizes[item.sizeIdx] || product.sizes[0];
         html += '<div class="cart-item">';

@@ -188,14 +188,17 @@
             }
 
             var itemsHTML = '';
-            // Group combo items
+            // Group combo items, package items, and regular items
             var comboGroups = {};
+            var packageItems = [];
             var regularItems = [];
             cart.forEach(function(item) {
                 if (item.type === 'custom_package') { regularItems.push(item); return; }
                 if (item.comboOfferId) {
                     if (!comboGroups[item.comboOfferId]) comboGroups[item.comboOfferId] = { title: item.comboTitle || 'عرض خاص', items: [], offerId: item.comboOfferId };
                     comboGroups[item.comboOfferId].items.push(item);
+                } else if (item.type === 'package') {
+                    packageItems.push(item);
                 } else {
                     regularItems.push(item);
                 }
@@ -206,15 +209,27 @@
                 var totalPrice = group.items.reduce(function(s, i) { return s + i.price; }, 0);
                 itemsHTML += '<div class="cart-combo-group"><div class="cart-combo-header"><span>🎁 ' + group.title + ' - ₪' + Math.round(totalPrice) + '</span><button class="cart-combo-edit" onclick="editCheckoutCombo(\'' + offerId + '\')">تعديل</button></div>';
                 group.items.forEach(function(item) {
-                    var p = products.find(function(pr) { return pr.id === item.productId; });
+                    var p = products.find(function(pr) { return String(pr.id) === String(item.productId); });
                     if (p) itemsHTML += '<div class="checkout-item combo-checkout-item"><img src="' + p.image + '" alt="' + p.name + '" onerror="this.style.display=\'none\'"><div class="checkout-item-info"><h4>' + p.name + '</h4></div><div class="checkout-item-price">₪' + Math.round(item.price) + '</div></div>';
                 });
                 itemsHTML += '</div>';
             });
+            // Render package items
+            packageItems.forEach(function(item) {
+                var productNames = (item.packageProducts || []).map(function(pid) {
+                    var p = products.find(function(pr) { return String(pr.id) === String(pid); });
+                    return p ? p.name : '';
+                }).filter(Boolean).join('، ');
+                var productImages = (item.packageProducts || []).slice(0, 4).map(function(pid) {
+                    var p = products.find(function(pr) { return String(pr.id) === String(pid); });
+                    return p ? '<img src="' + p.image + '" style="width:36px;height:36px;object-fit:cover;border-radius:6px;" onerror="this.style.display=\'none\'">' : '';
+                }).join('');
+                itemsHTML += '<div class="checkout-item"><div style="display:flex;gap:4px;flex-wrap:wrap;width:60px;">' + productImages + '</div><div class="checkout-item-info"><h4>📦 ' + (item.packageName || 'باقة') + '</h4><span class="item-brand" style="font-size:0.75rem;color:#6b7280;">' + productNames + '</span></div><div class="checkout-item-qty"><button onclick="changeQty(\'' + item.id + '\', 0, -1)">−</button><span>' + item.qty + '</span><button onclick="changeQty(\'' + item.id + '\', 0, 1)">+</button></div><div class="checkout-item-price">₪' + (item.price * item.qty) + '</div><button class="checkout-item-remove" onclick="removeItem(\'' + item.id + '\', 0)">✕</button></div>';
+            });
             // Render regular items
             itemsHTML += regularItems.map(function (item) {
                 if (item.type === 'custom_package') return renderCustomCheckoutItem(item);
-                var product = products.find(function (entry) { return entry.id === item.id; });
+                var product = products.find(function (entry) { return String(entry.id) === String(item.id); });
                 if (!product) return '';
                 var sizeData = getSizeData(product, item.sizeIdx);
                 var pricing = getFinalPrice(product, item.sizeIdx, discounts);
@@ -272,7 +287,9 @@
         function getSubtotal() {
             return cart.reduce(function (sum, item) {
                 if (item.type === 'custom_package') return sum;
-                var product = products.find(function (entry) { return entry.id === item.id; });
+                if (item.comboOfferId) return sum + (item.price * item.qty);
+                if (item.type === 'package') return sum + (item.price * item.qty);
+                var product = products.find(function (entry) { return String(entry.id) === String(item.id); });
                 return product ? sum + getFinalPrice(product, item.sizeIdx, discounts).final * item.qty : sum;
             }, 0);
         }
