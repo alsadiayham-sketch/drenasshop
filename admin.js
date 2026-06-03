@@ -1,6 +1,6 @@
 ﻿var ADMIN_USER = 'enas';
 var ADMIN_PASS = '5555';
-var FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect fill='%234a2c17' width='400' height='400'/%3E%3Ctext fill='%23d4a574' font-family='Arial' font-size='40' x='50%25' y='45%25' text-anchor='middle'%3E🍫%3C/text%3E%3Ctext fill='%23d4a574' font-family='Arial' font-size='20' x='50%25' y='60%25' text-anchor='middle'%3EEnas Shop%3C/text%3E%3C/svg%3E";
+var FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27400%27 height=%27400%27 viewBox=%270 0 400 400%27%3E%3Crect fill=%27%232C8C99%27 width=%27400%27 height=%27400%27/%3E%3Ctext fill=%27%23ffffff%27 font-family=%27Arial%27 font-size=%2740%27 x=%2750%2525%27 y=%2745%2525%27 text-anchor=%27middle%27%3E💆%3C/text%3E%3Ctext fill=%27%23ffffff%27 font-family=%27Arial%27 font-size=%2720%27 x=%2750%2525%27 y=%2760%2525%27 text-anchor=%27middle%27%3EEnas Shop%3C/text%3E%3C/svg%3E";
 
 var products = [];
 var discounts = [];
