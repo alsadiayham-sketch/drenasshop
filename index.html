@@ -52,17 +52,23 @@
         <a href="#order-tracking" onclick="toggleMobileMenu()">تتبّع الطلب</a>
     </div>
 
-    <section class="hero">
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <div class="hero-logo">
-                <img src="logo.png" id="heroLogo" alt="Enas Shop" class="hero-logo-img">
+    <section class="hero" id="heroSection">
+        <div class="hero-slider" id="heroSlider">
+            <!-- Default slide (shown until Firestore loads) -->
+            <div class="hero-slide active">
+                <div class="hero-overlay"></div>
+                <div class="hero-content">
+                    <div class="hero-logo">
+                        <img src="logo.png" id="heroLogo" alt="Enas Shop" class="hero-logo-img">
+                    </div>
+                    <h1 id="heroTitle" style="display:none;">Enas Shop | إيناس شوب</h1>
+                    <p class="hero-subtitle" id="heroSubtitle">منتجات عناية بالبشرة والجسم والشعر بأعلى جودة</p>
+                    <p class="hero-tagline">ماركات عالمية أصلية مع توصيل إلى الضفة والقدس والداخل</p>
+                    <a href="#products" class="btn-primary">تسوقي الآن</a>
+                </div>
             </div>
-            <h1 id="heroTitle" style="display:none;">Enas Shop | إيناس شوب</h1>
-            <p class="hero-subtitle" id="heroSubtitle">منتجات عناية بالبشرة والجسم والشعر بأعلى جودة</p>
-            <p class="hero-tagline">ماركات عالمية أصلية مع توصيل إلى الضفة والقدس والداخل</p>
-            <a href="#products" class="btn-primary">تسوقي الآن</a>
-            </div>
+        </div>
+        <div class="hero-dots" id="heroDots"></div>
     </section>
 
     <section id="products" class="filter-section">

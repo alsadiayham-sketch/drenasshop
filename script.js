@@ -129,6 +129,12 @@ function subscribeToStoreData() {
         markStoreLoaded('settings');
         setStoreMessage('تعذر تحميل إعدادات المتجر الحالية.', 'warning');
     }));
+
+    // Subscribe to hero display slides
+    unsubscribers.push(db.collection('heroDisplay').orderBy('order', 'asc').onSnapshot(function (snapshot) {
+        var slides = snapshot.docs.map(function (doc) { var d = doc.data(); d.id = doc.id; return d; });
+        if (slides.length > 0) renderHeroSlider(slides);
+    }, function () { /* keep default hero if fails */ }));
 }
 
 function applyFallbackStoreData(message) {
@@ -1066,4 +1072,83 @@ function addFromPDP() {
         btn.classList.remove('added');
         closePDP();
     }, 1200);
+}
+
+// ===== Hero Slider from Firestore =====
+var heroSlideIndex = 0;
+var heroSlideTimer = null;
+
+function renderHeroSlider(slides) {
+    var slider = document.getElementById('heroSlider');
+    var dots = document.getElementById('heroDots');
+    var hero = document.getElementById('heroSection');
+    if (!slider || !slides.length) return;
+
+    // Remove the static background since we now have slides
+    if (hero) hero.style.background = 'black';
+
+    slider.innerHTML = slides.map(function(slide, idx) {
+        var mediaHTML = '';
+        if (slide.type === 'video') {
+            mediaHTML = '<video class="hero-slide-media" src="' + slide.url + '" muted playsinline' + (idx === 0 ? ' autoplay' : '') + '></video>';
+        } else {
+            mediaHTML = '<img class="hero-slide-media" src="' + slide.url + '" alt="' + (slide.title || 'Enas Shop') + '">';
+        }
+        var captionHTML = '';
+        if (slide.title || slide.subtitle) {
+            captionHTML = '<div class="hero-overlay" style="background:rgba(0,0,0,0.35);"></div>' +
+                '<div class="hero-content">' +
+                (slide.title ? '<h1 style="font-size:2.8rem; font-weight:800; color:white; text-shadow:2px 2px 20px rgba(0,0,0,0.3); margin-bottom:12px;">' + slide.title + '</h1>' : '') +
+                (slide.subtitle ? '<p style="font-size:1.3rem; color:rgba(255,255,255,0.9); margin-bottom:24px;">' + slide.subtitle + '</p>' : '') +
+                '<a href="#products" class="btn-primary">تسوقي الآن</a>' +
+                '</div>';
+        } else {
+            captionHTML = '<div class="hero-overlay" style="background:rgba(0,0,0,0.15);"></div>' +
+                '<div class="hero-content">' +
+                '<div class="hero-logo"><img src="logo.png" alt="Enas Shop" class="hero-logo-img"></div>' +
+                '<a href="#products" class="btn-primary" style="margin-top:20px;">تسوقي الآن</a>' +
+                '</div>';
+        }
+        return '<div class="hero-slide' + (idx === 0 ? ' active' : '') + '">' + mediaHTML + captionHTML + '</div>';
+    }).join('');
+
+    // Render dots
+    if (slides.length > 1) {
+        dots.innerHTML = slides.map(function(_, idx) {
+            return '<button class="' + (idx === 0 ? 'active' : '') + '" onclick="goHeroSlide(' + idx + ')"></button>';
+        }).join('');
+        dots.style.display = 'flex';
+    } else {
+        dots.style.display = 'none';
+    }
+
+    heroSlideIndex = 0;
+    startHeroSlideTimer(slides);
+}
+
+function goHeroSlide(idx) {
+    var allSlides = document.querySelectorAll('#heroSlider .hero-slide');
+    var allDots = document.querySelectorAll('#heroDots button');
+    if (!allSlides.length) return;
+
+    allSlides[heroSlideIndex].classList.remove('active');
+    if (allDots[heroSlideIndex]) allDots[heroSlideIndex].classList.remove('active');
+
+    heroSlideIndex = idx;
+
+    allSlides[heroSlideIndex].classList.add('active');
+    if (allDots[heroSlideIndex]) allDots[heroSlideIndex].classList.add('active');
+
+    // Handle video autoplay
+    var video = allSlides[heroSlideIndex].querySelector('video');
+    if (video) { video.currentTime = 0; video.play(); }
+}
+
+function startHeroSlideTimer(slides) {
+    if (heroSlideTimer) clearInterval(heroSlideTimer);
+    if (slides.length <= 1) return;
+    heroSlideTimer = setInterval(function() {
+        var nextIdx = (heroSlideIndex + 1) % slides.length;
+        goHeroSlide(nextIdx);
+    }, 5000);
 }

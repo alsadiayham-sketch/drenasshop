@@ -28,6 +28,7 @@
                 <div class="admin-tabs">
                     <button class="tab-btn active" onclick="switchTab('dashboard', this)">لوحة المعلومات</button>
                     <button class="tab-btn" onclick="switchTab('products', this)">المنتجات</button>
+                    <button class="tab-btn" onclick="switchTab('hero', this)">العرض الرئيسي</button>
                     <button class="tab-btn" onclick="switchTab('orders', this)">الطلبات</button>
                     <button class="tab-btn" onclick="switchTab('settings', this)">الإعدادات</button>
                 </div>
@@ -88,6 +89,17 @@
                 <thead><tr><th>النوع</th><th>القيمة</th><th>نسبة الخصم</th><th>ينتهي</th><th>الوصف</th><th>إجراءات</th></tr></thead>
                 <tbody id="discountsTableBody"></tbody>
             </table>
+        </div>
+
+        <div class="tab-content" id="tab-hero">
+            <div class="tab-header">
+                <h3>إدارة العرض الرئيسي (Hero)</h3>
+                <div class="header-actions">
+                    <button class="btn-add" onclick="openHeroModal()">إضافة شريحة</button>
+                </div>
+            </div>
+            <p style="color:#6b7280; margin-bottom:20px; font-size:0.9rem;">أضيفي صور أو فيديوهات تظهر في العرض الرئيسي في أعلى الصفحة مع عنوان ووصف.</p>
+            <div class="hero-slides-list" id="heroSlidesList"></div>
         </div>
 
         <div class="tab-content" id="tab-orders">
@@ -165,6 +177,47 @@
                 <div class="form-group"><label>تاريخ الانتهاء (اختياري)</label><input type="date" id="discountExpiry"></div>
                 <div class="form-group"><label>وصف الخصم (يظهر في البانر)</label><input type="text" id="discountDescription" placeholder="خصم 20% على جميع منتجات..." required></div>
                 <div class="modal-actions"><button type="submit" class="btn-save">حفظ</button><button type="button" class="btn-cancel" onclick="closeModal('discountModal')">إلغاء</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="heroModal" style="display:none;">
+        <div class="modal small-modal">
+            <h3 id="heroModalTitle">إضافة شريحة جديدة</h3>
+            <form onsubmit="event.preventDefault(); saveHeroSlide(event)">
+                <input type="hidden" id="heroSlideId">
+                <div class="form-group">
+                    <label>نوع المحتوى</label>
+                    <select id="heroSlideType" onchange="toggleHeroMediaField()">
+                        <option value="image">صورة</option>
+                        <option value="video">فيديو</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>رابط الصورة أو الفيديو</label>
+                    <input type="url" id="heroSlideUrl" placeholder="https://..." required>
+                </div>
+                <div class="form-group" id="heroImageUploadGroup">
+                    <label>أو ارفعي صورة</label>
+                    <input type="file" id="heroSlideFile" accept="image/*,video/*" onchange="previewHeroMedia(this)">
+                    <div id="heroMediaPreview" class="image-preview"></div>
+                </div>
+                <div class="form-group">
+                    <label>العنوان (اختياري)</label>
+                    <input type="text" id="heroSlideTitle" placeholder="عنوان يظهر فوق الصورة">
+                </div>
+                <div class="form-group">
+                    <label>الوصف (اختياري)</label>
+                    <input type="text" id="heroSlideSubtitle" placeholder="وصف قصير يظهر تحت العنوان">
+                </div>
+                <div class="form-group">
+                    <label>الترتيب</label>
+                    <input type="number" id="heroSlideOrder" value="1" min="1">
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn-save">حفظ</button>
+                    <button type="button" class="btn-cancel" onclick="closeModal('heroModal')">إلغاء</button>
+                </div>
             </form>
         </div>
     </div>

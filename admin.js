@@ -116,6 +116,8 @@ function subscribeToCollections() {
     unsubscribers.forEach(function (unsubscribe) { if (typeof unsubscribe === 'function') unsubscribe(); });
     unsubscribers = [];
 
+    subscribeToHero();
+
     unsubscribers.push(db.collection('products').onSnapshot(function (snapshot) {
         products = snapshot.docs.map(function (docSnap) { var d = docSnap.data(); d.id = docSnap.id; return normalizeProduct(d); });
         adminReady.products = true;
@@ -711,4 +713,166 @@ async function uploadProductImage(file, productId) {
         };
         reader.readAsDataURL(file);
     });
+}
+// ===== Hero Display Management =====
+var heroSlides = [];
+
+function subscribeToHero() {
+    unsubscribers.push(db.collection('heroDisplay').orderBy('order', 'asc').onSnapshot(function(snapshot) {
+        heroSlides = snapshot.docs.map(function(doc) { var d = doc.data(); d.id = doc.id; return d; });
+        renderHeroSlides();
+    }, function(error) {
+        console.error('Hero subscribe error:', error);
+    }));
+}
+
+function renderHeroSlides() {
+    var container = document.getElementById('heroSlidesList');
+    if (!container) return;
+    if (!heroSlides.length) {
+        container.innerHTML = '<div class="empty-hero-state"><p>لا توجد شرائح في العرض الرئيسي حالياً</p><button class="btn-add" onclick="openHeroModal()">إضافة أول شريحة</button></div>';
+        return;
+    }
+    container.innerHTML = heroSlides.map(function(slide, idx) {
+        var preview = slide.type === 'video'
+            ? '<video src="' + slide.url + '" muted></video>'
+            : '<img src="' + slide.url + '" alt="' + (slide.title || 'Hero') + '">';
+        return '<div class="hero-slide-card">' +
+            '<div class="slide-preview">' + preview + '</div>' +
+            '<div class="slide-info">' +
+                '<span class="slide-type">' + (slide.type === 'video' ? '🎬 فيديو' : '🖼️ صورة') + '</span>' +
+                '<h4>' + (slide.title || '(بدون عنوان)') + '</h4>' +
+                '<p>' + (slide.subtitle || '(بدون وصف)') + '</p>' +
+                '<p style="font-size:0.75rem; color:#999;">ترتيب: ' + (slide.order || 1) + '</p>' +
+            '</div>' +
+            '<div class="slide-actions">' +
+                '<div class="slide-order">' +
+                    '<button onclick="moveHeroSlide(\'' + slide.id + '\', -1)" title="أعلى">↑</button>' +
+                    '<button onclick="moveHeroSlide(\'' + slide.id + '\', 1)" title="أسفل">↓</button>' +
+                '</div>' +
+                '<button class="btn-edit" onclick="editHeroSlide(\'' + slide.id + '\')">تعديل</button>' +
+                '<button class="btn-delete" onclick="deleteHeroSlide(\'' + slide.id + '\')">حذف</button>' +
+            '</div>' +
+        '</div>';
+    }).join('');
+}
+
+function openHeroModal(slideId) {
+    document.getElementById('heroSlideId').value = '';
+    document.getElementById('heroSlideType').value = 'image';
+    document.getElementById('heroSlideUrl').value = '';
+    document.getElementById('heroSlideTitle').value = '';
+    document.getElementById('heroSlideSubtitle').value = '';
+    document.getElementById('heroSlideOrder').value = heroSlides.length + 1;
+    document.getElementById('heroMediaPreview').innerHTML = '';
+    document.getElementById('heroModalTitle').textContent = 'إضافة شريحة جديدة';
+    document.getElementById('heroModal').style.display = 'flex';
+}
+
+function editHeroSlide(slideId) {
+    var slide = heroSlides.find(function(s) { return s.id === slideId; });
+    if (!slide) return;
+    document.getElementById('heroSlideId').value = slideId;
+    document.getElementById('heroSlideType').value = slide.type || 'image';
+    document.getElementById('heroSlideUrl').value = slide.url || '';
+    document.getElementById('heroSlideTitle').value = slide.title || '';
+    document.getElementById('heroSlideSubtitle').value = slide.subtitle || '';
+    document.getElementById('heroSlideOrder').value = slide.order || 1;
+    document.getElementById('heroMediaPreview').innerHTML = '';
+    document.getElementById('heroModalTitle').textContent = 'تعديل الشريحة';
+    document.getElementById('heroModal').style.display = 'flex';
+}
+
+async function saveHeroSlide() {
+    var id = document.getElementById('heroSlideId').value;
+    var type = document.getElementById('heroSlideType').value;
+    var url = document.getElementById('heroSlideUrl').value.trim();
+    var title = document.getElementById('heroSlideTitle').value.trim();
+    var subtitle = document.getElementById('heroSlideSubtitle').value.trim();
+    var order = parseInt(document.getElementById('heroSlideOrder').value) || 1;
+
+    // Check if file uploaded
+    var fileInput = document.getElementById('heroSlideFile');
+    if (fileInput.files && fileInput.files[0] && !url) {
+        var file = fileInput.files[0];
+        var reader = new FileReader();
+        reader.onload = async function(e) {
+            var dataUrl = e.target.result;
+            await saveHeroSlideData(id, { type: type, url: dataUrl, title: title, subtitle: subtitle, order: order });
+        };
+        reader.readAsDataURL(file);
+        return;
+    }
+
+    if (!url) { alert('يرجى إدخال رابط الصورة أو الفيديو'); return; }
+    await saveHeroSlideData(id, { type: type, url: url, title: title, subtitle: subtitle, order: order });
+}
+
+async function saveHeroSlideData(id, data) {
+    try {
+        setAdminLoading(true);
+        if (id) {
+            await db.collection('heroDisplay').doc(id).update(data);
+            setAdminStatus('تم تحديث الشريحة بنجاح.', 'success');
+        } else {
+            await db.collection('heroDisplay').add(data);
+            setAdminStatus('تمت إضافة الشريحة بنجاح.', 'success');
+        }
+        closeModal('heroModal');
+    } catch (error) {
+        console.error(error);
+        setAdminStatus('حدث خطأ أثناء حفظ الشريحة.', 'error');
+    }
+    setAdminLoading(false);
+}
+
+async function deleteHeroSlide(slideId) {
+    if (!confirm('هل تريدين حذف هذه الشريحة؟')) return;
+    try {
+        setAdminLoading(true);
+        await db.collection('heroDisplay').doc(slideId).delete();
+        setAdminStatus('تم حذف الشريحة.', 'success');
+    } catch (error) {
+        console.error(error);
+        setAdminStatus('حدث خطأ أثناء الحذف.', 'error');
+    }
+    setAdminLoading(false);
+}
+
+async function moveHeroSlide(slideId, direction) {
+    var idx = heroSlides.findIndex(function(s) { return s.id === slideId; });
+    if (idx < 0) return;
+    var newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= heroSlides.length) return;
+    try {
+        var batch = rawDb.batch();
+        var currentRef = db.collection('heroDisplay').doc(heroSlides[idx].id);
+        var swapRef = db.collection('heroDisplay').doc(heroSlides[newIdx].id);
+        batch.update(currentRef, { order: heroSlides[newIdx].order || (newIdx + 1) });
+        batch.update(swapRef, { order: heroSlides[idx].order || (idx + 1) });
+        await batch.commit();
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+function previewHeroMedia(input) {
+    var preview = document.getElementById('heroMediaPreview');
+    if (!input.files || !input.files[0]) { preview.innerHTML = ''; return; }
+    var file = input.files[0];
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        if (file.type.startsWith('video/')) {
+            preview.innerHTML = '<video src="' + e.target.result + '" style="max-width:200px; max-height:120px; border-radius:10px;" controls muted></video>';
+        } else {
+            preview.innerHTML = '<img src="' + e.target.result + '" style="max-width:200px; max-height:120px; border-radius:10px; object-fit:cover;">';
+        }
+        // Auto-detect type
+        document.getElementById('heroSlideType').value = file.type.startsWith('video/') ? 'video' : 'image';
+    };
+    reader.readAsDataURL(file);
+}
+
+function toggleHeroMediaField() {
+    // No special action needed for now
 }
