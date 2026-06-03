@@ -176,6 +176,15 @@
         </div>
     </section>
 
+    <!-- Combo Offer Banner -->
+    <div class="combo-banner" id="comboBanner" style="display:none;" onclick="openComboModal()">
+        <div class="combo-banner-content">
+            <span class="combo-banner-icon">🎁</span>
+            <span class="combo-banner-text" id="comboBannerText"></span>
+            <button class="combo-banner-btn">اختاري الآن</button>
+        </div>
+    </div>
+
     <div class="modal-overlay pdp-overlay" id="pdpModal" style="display:none;" onclick="closePDP(event)">
         <div class="pdp-modal" onclick="event.stopPropagation()">
             <button class="pdp-close" onclick="closePDP()">✕</button>
@@ -204,6 +213,26 @@
             <div class="pdp-related" id="pdpRelated" style="display:none;">
                 <h3>منتجات مشابهة</h3>
                 <div class="pdp-related-grid" id="pdpRelatedGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Combo Offer Modal -->
+    <div class="modal-overlay combo-overlay" id="comboModal" style="display:none;" onclick="closeComboModal()">
+        <div class="combo-modal" onclick="event.stopPropagation()">
+            <button class="pdp-close" onclick="closeComboModal()">✕</button>
+            <div class="combo-modal-header">
+                <span class="combo-icon">🎁</span>
+                <h2 id="comboTitle">عرض خاص</h2>
+                <p id="comboDesc"></p>
+                <div class="combo-progress">
+                    <span id="comboCount">0</span> / <span id="comboTotal">4</span> مختارة
+                    <span class="combo-price" id="comboPrice"></span>
+                </div>
+            </div>
+            <div class="combo-products-grid" id="comboProductsGrid"></div>
+            <div class="combo-modal-footer">
+                <button class="btn-primary combo-confirm-btn" id="comboConfirmBtn" onclick="confirmCombo()" disabled>إضافة العرض إلى السلة</button>
             </div>
         </div>
     </div>

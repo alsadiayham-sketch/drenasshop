@@ -105,6 +105,9 @@
         var cart = normalizeCartItems(JSON.parse(localStorage.getItem('drenasshop_cart') || '[]'), products);
         var selectedDelivery = localStorage.getItem('drenasshop_delivery_method') || 'delivery';
         var selectedRegion = '';
+        var comboOffers = [];
+        var comboSelectedIds = [];
+        var currentComboOffer = null;
 
         var DELIVERY_COSTS = { westbank: 20, jerusalem: 30, inside: 50 };
         var DELIVERY_LABELS = { westbank: 'الضفة', jerusalem: 'القدس', inside: 'الداخل' };
@@ -126,11 +129,13 @@
                 Promise.all([
                     db.collection('products').get(),
                     db.collection('discounts').get(),
-                    db.collection('settings').doc('config').get()
+                    db.collection('settings').doc('config').get(),
+                    db.collection('offers').get()
                 ]).then(function (responses) {
                     var productsSnap = responses[0];
                     var discountsSnap = responses[1];
                     var settingsSnap = responses[2];
+                    var offersSnap = responses[3];
                     fetchDone = true;
                     clearTimeout(timeout);
 
@@ -139,6 +144,9 @@
                     }
                     discounts = discountsSnap.docs.map(function (docSnap) { return normalizeDiscount(docSnap.data()); });
                     siteSettings = normalizeSettings(settingsSnap.exists ? settingsSnap.data() : DEFAULT_SITE_SETTINGS);
+                    if (offersSnap && !offersSnap.empty) {
+                        offersSnap.forEach(function(doc) { var d = doc.data(); d.id = doc.id; if (d.active && d.type === 'combo') comboOffers.push(d); });
+                    }
                     cart = normalizeCartItems(JSON.parse(localStorage.getItem('drenasshop_cart') || '[]'), products);
                     saveCart();
                     render();
@@ -179,14 +187,39 @@
                 return;
             }
 
-            var itemsHTML = cart.map(function (item) {
+            var itemsHTML = '';
+            // Group combo items
+            var comboGroups = {};
+            var regularItems = [];
+            cart.forEach(function(item) {
+                if (item.type === 'custom_package') { regularItems.push(item); return; }
+                if (item.comboOfferId) {
+                    if (!comboGroups[item.comboOfferId]) comboGroups[item.comboOfferId] = { title: item.comboTitle || 'عرض خاص', items: [], offerId: item.comboOfferId };
+                    comboGroups[item.comboOfferId].items.push(item);
+                } else {
+                    regularItems.push(item);
+                }
+            });
+            // Render combo groups
+            Object.keys(comboGroups).forEach(function(offerId) {
+                var group = comboGroups[offerId];
+                var totalPrice = group.items.reduce(function(s, i) { return s + i.price; }, 0);
+                itemsHTML += '<div class="cart-combo-group"><div class="cart-combo-header"><span>🎁 ' + group.title + ' - ₪' + Math.round(totalPrice) + '</span><button class="cart-combo-edit" onclick="editCheckoutCombo(\'' + offerId + '\')">تعديل</button></div>';
+                group.items.forEach(function(item) {
+                    var p = products.find(function(pr) { return pr.id === item.productId; });
+                    if (p) itemsHTML += '<div class="checkout-item combo-checkout-item"><img src="' + p.image + '" alt="' + p.name + '" onerror="this.style.display=\'none\'"><div class="checkout-item-info"><h4>' + p.name + '</h4></div><div class="checkout-item-price">₪' + Math.round(item.price) + '</div></div>';
+                });
+                itemsHTML += '</div>';
+            });
+            // Render regular items
+            itemsHTML += regularItems.map(function (item) {
                 if (item.type === 'custom_package') return renderCustomCheckoutItem(item);
                 var product = products.find(function (entry) { return entry.id === item.id; });
                 if (!product) return '';
                 var sizeData = getSizeData(product, item.sizeIdx);
                 var pricing = getFinalPrice(product, item.sizeIdx, discounts);
                 var lineTotal = pricing.final * item.qty;
-                return '<div class="checkout-item"><img src="' + product.image + '" alt="' + product.name + '"><div class="checkout-item-info"><h4>' + product.name + '</h4><span class="item-brand">' + product.brand + '</span><span class="item-size">' + getSizeLabel(sizeData) + '</span></div><div class="checkout-item-qty"><button onclick="changeQty(' + item.id + ', ' + item.sizeIdx + ', -1)">−</button><span>' + item.qty + '</span><button onclick="changeQty(' + item.id + ', ' + item.sizeIdx + ', 1)">+</button></div><div class="checkout-item-price">' + formatCurrency(lineTotal) + '</div><button class="checkout-item-remove" onclick="removeItem(' + item.id + ', ' + item.sizeIdx + ')">✕</button></div>';
+                return '<div class="checkout-item"><img src="' + product.image + '" alt="' + product.name + '"><div class="checkout-item-info"><h4>' + product.name + '</h4><span class="item-brand">' + product.brand + '</span><span class="item-size">' + getSizeLabel(sizeData) + '</span></div><div class="checkout-item-qty"><button onclick="changeQty(\'' + item.id + '\', ' + item.sizeIdx + ', -1)">−</button><span>' + item.qty + '</span><button onclick="changeQty(\'' + item.id + '\', ' + item.sizeIdx + ', 1)">+</button></div><div class="checkout-item-price">' + formatCurrency(lineTotal) + '</div><button class="checkout-item-remove" onclick="removeItem(\'' + item.id + '\', ' + item.sizeIdx + ')">✕</button></div>';
             }).join('');
 
             var subtotal = getSubtotal();
@@ -461,6 +494,94 @@
                 setStatus('');
             });
         }
+        // Combo edit in checkout
+        function editCheckoutCombo(offerId) {
+            currentComboOffer = comboOffers.find(function(o) { return o.id === offerId; });
+            if (!currentComboOffer) return;
+            var comboItems = cart.filter(function(item) { return item.comboOfferId === offerId; });
+            comboSelectedIds = comboItems.map(function(item) { return item.productId; });
+            openCheckoutComboModal();
+        }
+
+        function openCheckoutComboModal() {
+            if (!currentComboOffer) return;
+            var modal = document.getElementById('checkoutComboModal');
+            if (!modal) return;
+            document.getElementById('cComboTitle').textContent = currentComboOffer.title || 'عرض خاص';
+            document.getElementById('cComboTotal').textContent = currentComboOffer.pickCount || 4;
+            document.getElementById('cComboPrice').textContent = '₪' + (currentComboOffer.comboPrice || 0);
+            renderCheckoutComboProducts();
+            updateCheckoutComboProgress();
+            modal.style.display = 'flex';
+        }
+
+        function closeCheckoutComboModal() {
+            var modal = document.getElementById('checkoutComboModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function renderCheckoutComboProducts() {
+            var grid = document.getElementById('cComboGrid');
+            if (!grid || !currentComboOffer) return;
+            var eligible = currentComboOffer.eligibleProducts || [];
+            var pickCount = currentComboOffer.pickCount || 4;
+            grid.innerHTML = eligible.map(function(pid) {
+                var product = products.find(function(p) { return p.id === pid; });
+                if (!product) return '';
+                var isSelected = comboSelectedIds.indexOf(pid) !== -1;
+                var isDisabled = !isSelected && comboSelectedIds.length >= pickCount;
+                return '<div class="combo-product-card' + (isSelected ? ' selected' : '') + (isDisabled ? ' disabled' : '') + '" onclick="toggleCheckoutCombo(\'' + pid + '\')">' +
+                    '<div class="combo-card-check">✓</div>' +
+                    '<img src="' + product.image + '" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">' +
+                    '<div class="combo-card-info"><h4>' + product.name + '</h4></div></div>';
+            }).join('');
+        }
+
+        function toggleCheckoutCombo(pid) {
+            if (!currentComboOffer) return;
+            var pickCount = currentComboOffer.pickCount || 4;
+            var idx = comboSelectedIds.indexOf(pid);
+            if (idx !== -1) comboSelectedIds.splice(idx, 1);
+            else if (comboSelectedIds.length < pickCount) comboSelectedIds.push(pid);
+            renderCheckoutComboProducts();
+            updateCheckoutComboProgress();
+        }
+
+        function updateCheckoutComboProgress() {
+            var countEl = document.getElementById('cComboCount');
+            var btn = document.getElementById('cComboConfirmBtn');
+            var pickCount = currentComboOffer ? (currentComboOffer.pickCount || 4) : 4;
+            if (countEl) countEl.textContent = comboSelectedIds.length;
+            if (btn) btn.disabled = comboSelectedIds.length !== pickCount;
+        }
+
+        function confirmCheckoutCombo() {
+            if (!currentComboOffer || comboSelectedIds.length !== (currentComboOffer.pickCount || 4)) return;
+            var unitPrice = (currentComboOffer.comboPrice || 0) / (currentComboOffer.pickCount || 1);
+            cart = cart.filter(function(item) { return !item.comboOfferId || item.comboOfferId !== currentComboOffer.id; });
+            comboSelectedIds.forEach(function(pid) {
+                cart.push({ id: pid + '__combo__' + currentComboOffer.id, productId: pid, sizeIdx: 0, qty: 1, price: Math.round(unitPrice * 100) / 100, comboOfferId: currentComboOffer.id, comboTitle: currentComboOffer.title });
+            });
+            saveCart();
+            closeCheckoutComboModal();
+            render();
+        }
     </script>
+
+    <!-- Checkout Combo Edit Modal -->
+    <div class="modal-overlay combo-overlay" id="checkoutComboModal" style="display:none;" onclick="closeCheckoutComboModal()">
+        <div class="combo-modal" onclick="event.stopPropagation()">
+            <button class="pdp-close" onclick="closeCheckoutComboModal()">✕</button>
+            <div class="combo-modal-header">
+                <span class="combo-icon">🎁</span>
+                <h2 id="cComboTitle">تعديل العرض</h2>
+                <div class="combo-progress"><span id="cComboCount">0</span> / <span id="cComboTotal">4</span> مختارة <span class="combo-price" id="cComboPrice"></span></div>
+            </div>
+            <div class="combo-products-grid" id="cComboGrid"></div>
+            <div class="combo-modal-footer">
+                <button class="btn-primary combo-confirm-btn" id="cComboConfirmBtn" onclick="confirmCheckoutCombo()" disabled>تأكيد التعديل</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
