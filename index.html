@@ -18,6 +18,15 @@
         </div>
     </div>
 
+    <!-- Combo Offer Banner (above header) -->
+    <div class="combo-banner" id="comboBanner" style="display:none;" onclick="document.getElementById('comboOffersSection').scrollIntoView({behavior:'smooth'})">
+        <div class="combo-banner-content">
+            <span class="combo-banner-icon">🔥</span>
+            <span class="combo-banner-text" id="comboBannerText"></span>
+            <span class="combo-banner-icon">🔥</span>
+        </div>
+    </div>
+
     <nav class="navbar" id="navbar">
         <div class="container nav-container">
             <a href="#" class="logo">
@@ -76,6 +85,14 @@
         <div class="trust-item"><div class="icon">🩺</div><span>اختيار متخصصين</span></div>
         <div class="trust-item"><div class="icon">📋</div><span>توصيل سريع وآمن</span></div>
     </div>
+
+    <!-- Combo Offers Section (before products) -->
+    <section class="combo-offers-section" id="comboOffersSection" style="display:none;">
+        <div class="container">
+            <h2 class="section-title combo-section-title">🔥 عروض محدودة</h2>
+            <div class="combo-offers-grid" id="comboOffersGrid"></div>
+        </div>
+    </section>
 
     <section id="products" class="filter-section">
         <div class="container">
@@ -175,15 +192,6 @@
             </div>
         </div>
     </section>
-
-    <!-- Combo Offer Banner -->
-    <div class="combo-banner" id="comboBanner" style="display:none;" onclick="openComboModal()">
-        <div class="combo-banner-content">
-            <span class="combo-banner-icon">🎁</span>
-            <span class="combo-banner-text" id="comboBannerText"></span>
-            <button class="combo-banner-btn">اختاري الآن</button>
-        </div>
-    </div>
 
     <div class="modal-overlay pdp-overlay" id="pdpModal" style="display:none;" onclick="closePDP(event)">
         <div class="pdp-modal" onclick="event.stopPropagation()">

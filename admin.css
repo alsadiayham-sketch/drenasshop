@@ -237,3 +237,27 @@ html, body { font-family: 'Tajawal', sans-serif; background: #fafaf8; color: #1a
 .empty-hero-state { text-align: center; padding: 60px 20px; background: white; border-radius: 16px; border: 2px dashed #e5e7eb; }
 .empty-hero-state p { color: #6b7280; margin-bottom: 16px; }
 @media (max-width: 768px) { .hero-slide-card { grid-template-columns: 40px 1fr; } .hero-slide-card .slide-preview { display: none; } .hero-slide-card .slide-actions { flex-wrap: wrap; } }
+
+/* Offers Tab */
+.offers-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.offer-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; transition: box-shadow 0.2s; }
+.offer-card.active { border-color: #0066cc; box-shadow: 0 2px 12px rgba(0,102,204,0.1); }
+.offer-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.offer-badge { font-size: 0.75rem; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+.offer-badge.active { background: #dcfce7; color: #166534; }
+.offer-badge.inactive { background: #f3f4f6; color: #6b7280; }
+.offer-card-actions button { background: none; border: none; cursor: pointer; font-size: 1.1rem; margin-left: 6px; }
+.offer-card h4 { font-size: 1.1rem; color: #1a2a3a; margin-bottom: 10px; }
+.offer-card-details { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.85rem; color: #4b5563; }
+.offer-card-dates { margin-top: 10px; font-size: 0.8rem; color: #9ca3af; }
+
+/* Offer Modal Product Grid */
+.offer-products-search { margin-bottom: 10px; }
+.offer-products-search input { width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; }
+.offer-products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; }
+.offer-product-item { display: flex; flex-direction: column; align-items: center; padding: 8px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; position: relative; text-align: center; }
+.offer-product-item:hover { background: #f3f4f6; }
+.offer-product-item.selected { border-color: #0066cc; background: #eff6ff; }
+.offer-product-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; margin-bottom: 6px; }
+.offer-product-item span { font-size: 0.75rem; line-height: 1.2; }
+.offer-product-check { position: absolute; top: 4px; right: 4px; background: #0066cc; color: #fff; width: 18px; height: 18px; border-radius: 50%; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; }

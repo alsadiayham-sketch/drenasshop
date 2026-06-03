@@ -150,15 +150,21 @@ function subscribeToStoreData() {
         if (slides.length > 0) renderHeroSlider(slides);
     }, function () { /* keep default hero if fails */ }));
 
-    // Subscribe to combo offers
+    // Subscribe to combo offers (filter by date)
     unsubscribers.push(db.collection('offers').onSnapshot(function (snapshot) {
+        var now = new Date().toISOString().split('T')[0];
         comboOffers = [];
         snapshot.forEach(function(doc) {
             var d = doc.data();
             d.id = doc.id;
-            if (d.active && d.type === 'combo') comboOffers.push(d);
+            if (d.type !== 'combo') return;
+            if (d.active === false) return;
+            if (d.startDate && now < d.startDate) return;
+            if (d.endDate && now > d.endDate) return;
+            comboOffers.push(d);
         });
         renderComboBanner();
+        renderComboOffersSection();
     }, function () { /* ignore */ }));
 }
 
@@ -188,6 +194,7 @@ function renderStorefront() {
     updateCartBadge();
     renderProducts(getFilteredProducts(currentFilter));
     updateCheckoutLink(updateCartTotal());
+    renderComboOffersSection();
     if (!usedFallbackData) setStoreMessage('', 'info');
 }
 
@@ -1109,8 +1116,8 @@ function renderHeroSlider(slides) {
     var hero = document.getElementById('heroSection');
     if (!slider || !slides.length) return;
 
-    // Remove the static background since we now have slides
-    if (hero) hero.style.background = 'black';
+    // The static hero-bg.png shows until slides load and fade in
+    if (hero) hero.style.background = 'linear-gradient(135deg, #0a1628 0%, #1a3a5c 50%, #0d2847 100%)';
 
     slider.innerHTML = slides.map(function(slide, idx) {
         var mediaHTML = '';
@@ -1173,15 +1180,46 @@ function startHeroSlideTimer(slides) {
 function renderComboBanner() {
     var banner = document.getElementById('comboBanner');
     if (!banner) return;
-    if (comboOffers.length === 0) { banner.style.display = 'none'; return; }
-    var offer = comboOffers[0];
-    document.getElementById('comboBannerText').textContent = offer.title || 'عرض خاص!';
+    if (comboOffers.length === 0) {
+        banner.style.display = 'none';
+        document.body.classList.remove('has-combo-banner');
+        return;
+    }
+    var texts = comboOffers.map(function(o) { return '🔥 ' + (o.title || 'عرض خاص!'); }).join('   •   ');
+    document.getElementById('comboBannerText').textContent = texts;
     banner.style.display = 'block';
+    document.body.classList.add('has-combo-banner');
 }
 
-function openComboModal(initialSelection) {
+function renderComboOffersSection() {
+    var section = document.getElementById('comboOffersSection');
+    var grid = document.getElementById('comboOffersGrid');
+    if (!section || !grid) return;
+    if (comboOffers.length === 0) { section.style.display = 'none'; return; }
+    section.style.display = 'block';
+    grid.innerHTML = comboOffers.map(function(offer) {
+        var eligiblePreview = (offer.eligibleProducts || []).slice(0, 6).map(function(pid) {
+            var p = products.find(function(pr) { return pr.id === pid; });
+            if (!p) return '';
+            return '<img src="' + p.image + '" alt="' + p.name + '" onerror="this.src=\'' + FALLBACK_IMAGE + '\'" title="' + p.name + '">';
+        }).join('');
+        var moreCount = (offer.eligibleProducts || []).length - 6;
+        return '<div class="combo-offer-card">' +
+            '<div class="combo-offer-badge">🔥 عرض محدود</div>' +
+            '<h3>' + (offer.title || 'عرض خاص') + '</h3>' +
+            '<div class="combo-offer-price"><span class="combo-price-tag">₪' + (offer.comboPrice || 0) + '</span> <span class="combo-pick-info">لـ ' + (offer.pickCount || 4) + ' منتجات</span></div>' +
+            '<div class="combo-offer-preview">' + eligiblePreview + (moreCount > 0 ? '<span class="combo-more">+' + moreCount + '</span>' : '') + '</div>' +
+            '<button class="btn-primary combo-get-btn" onclick="openComboModal(null, \'' + offer.id + '\')">اختاري باكيج بسعر خاص</button>' +
+            '</div>';
+    }).join('');
+}
+
+function openComboModal(initialSelection, offerId) {
     if (comboOffers.length === 0) return;
-    currentComboOffer = comboOffers[0];
+    if (offerId) {
+        currentComboOffer = comboOffers.find(function(o) { return o.id === offerId; });
+    }
+    if (!currentComboOffer) currentComboOffer = comboOffers[0];
     var modal = document.getElementById('comboModal');
     if (!modal) return;
 

@@ -5,6 +5,7 @@ var FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/
 var products = [];
 var discounts = [];
 var orders = [];
+var offers = [];
 var siteSettings = normalizeSettings(DEFAULT_SITE_SETTINGS);
 var unsubscribers = [];
 var charts = {};
@@ -167,6 +168,11 @@ function subscribeToCollections() {
         setAdminStatus('تعذر تحميل الإعدادات.', 'error');
         setAdminLoading(false);
     }));
+
+    unsubscribers.push(db.collection('offers').onSnapshot(function (snapshot) {
+        offers = snapshot.docs.map(function (docSnap) { var d = docSnap.data(); d.id = docSnap.id; return d; });
+        renderOffersList();
+    }, function (error) { console.error('Offers load error', error); }));
 }
 
 function checkAdminReady() {
@@ -952,4 +958,149 @@ function toggleHeroMediaField() {
     } else {
         uploadGroup.style.display = '';
     }
+}
+
+// ===== Offers Management =====
+var offerSelectedProducts = [];
+
+function renderOffersList() {
+    var container = document.getElementById('offersListContainer');
+    if (!container) return;
+    if (offers.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#888;"><p>لا توجد عروض حالياً</p><p style="font-size:0.85rem;">أنشئي عرض كومبو جديد من الزر أعلاه</p></div>';
+        return;
+    }
+    container.innerHTML = offers.map(function(offer) {
+        var isActive = isOfferActive(offer);
+        var statusBadge = isActive ? '<span class="offer-badge active">نشط</span>' : '<span class="offer-badge inactive">غير نشط</span>';
+        var dateInfo = '';
+        if (offer.startDate) dateInfo += 'من ' + offer.startDate + ' ';
+        if (offer.endDate) dateInfo += 'إلى ' + offer.endDate;
+        return '<div class="offer-card' + (isActive ? ' active' : '') + '">' +
+            '<div class="offer-card-header">' + statusBadge + '<div class="offer-card-actions"><button onclick="editOffer(\'' + offer.id + '\')" title="تعديل">✏️</button><button onclick="deleteOffer(\'' + offer.id + '\')" title="حذف">🗑️</button></div></div>' +
+            '<h4>🎁 ' + (offer.title || 'عرض بدون عنوان') + '</h4>' +
+            '<div class="offer-card-details">' +
+            '<span>📦 ' + (offer.pickCount || 0) + ' منتجات</span>' +
+            '<span>💰 ₪' + (offer.comboPrice || 0) + '</span>' +
+            '<span>📋 ' + ((offer.eligibleProducts || []).length) + ' منتج مشارك</span>' +
+            (offer.uniqueOnly ? '<span>🔒 بدون تكرار</span>' : '<span>🔓 مع تكرار</span>') +
+            '</div>' +
+            (dateInfo ? '<div class="offer-card-dates">' + dateInfo + '</div>' : '') +
+            '</div>';
+    }).join('');
+}
+
+function isOfferActive(offer) {
+    var now = new Date().toISOString().split('T')[0];
+    if (offer.startDate && now < offer.startDate) return false;
+    if (offer.endDate && now > offer.endDate) return false;
+    return offer.active !== false;
+}
+
+function openOfferModal(existingOffer) {
+    var modal = document.getElementById('offerModal');
+    if (!modal) return;
+    document.getElementById('offerModalTitle').textContent = existingOffer ? 'تعديل العرض' : 'إضافة عرض جديد';
+    document.getElementById('offerId').value = existingOffer ? existingOffer.id : '';
+    document.getElementById('offerTitle').value = existingOffer ? (existingOffer.title || '') : '';
+    document.getElementById('offerPickCount').value = existingOffer ? (existingOffer.pickCount || 4) : 4;
+    document.getElementById('offerComboPrice').value = existingOffer ? (existingOffer.comboPrice || 50) : 50;
+    document.getElementById('offerStartDate').value = existingOffer ? (existingOffer.startDate || '') : '';
+    document.getElementById('offerEndDate').value = existingOffer ? (existingOffer.endDate || '') : '';
+    document.getElementById('offerUniqueOnly').checked = existingOffer ? (existingOffer.uniqueOnly !== false) : true;
+    document.getElementById('offerAutoSelect').checked = existingOffer ? !!existingOffer.autoSelect : false;
+    offerSelectedProducts = existingOffer ? (existingOffer.eligibleProducts || []).slice() : [];
+    renderOfferProductsGrid();
+    modal.style.display = 'flex';
+}
+
+function editOffer(offerId) {
+    var offer = offers.find(function(o) { return o.id === offerId; });
+    if (offer) openOfferModal(offer);
+}
+
+function renderOfferProductsGrid() {
+    var grid = document.getElementById('offerProductsGrid');
+    if (!grid) return;
+    var search = (document.getElementById('offerProductSearch') || {}).value || '';
+    var filtered = products.filter(function(p) {
+        if (!search.trim()) return true;
+        return p.name.indexOf(search.trim()) !== -1 || (p.brand || '').indexOf(search.trim()) !== -1;
+    });
+    grid.innerHTML = filtered.map(function(p) {
+        var isSelected = offerSelectedProducts.indexOf(p.id) !== -1;
+        return '<div class="offer-product-item' + (isSelected ? ' selected' : '') + '" onclick="toggleOfferProduct(\'' + p.id + '\')">' +
+            '<img src="' + p.image + '" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">' +
+            '<span>' + p.name + '</span>' +
+            (isSelected ? '<span class="offer-product-check">✓</span>' : '') +
+            '</div>';
+    }).join('');
+    var countEl = document.getElementById('offerSelectedCount');
+    if (countEl) countEl.textContent = offerSelectedProducts.length;
+}
+
+function filterOfferProducts() { renderOfferProductsGrid(); }
+
+function toggleOfferProduct(pid) {
+    var idx = offerSelectedProducts.indexOf(pid);
+    if (idx !== -1) offerSelectedProducts.splice(idx, 1);
+    else offerSelectedProducts.push(pid);
+    renderOfferProductsGrid();
+}
+
+async function saveOffer() {
+    var id = document.getElementById('offerId').value;
+    var title = document.getElementById('offerTitle').value.trim();
+    var pickCount = parseInt(document.getElementById('offerPickCount').value) || 4;
+    var comboPrice = parseFloat(document.getElementById('offerComboPrice').value) || 50;
+    var startDate = document.getElementById('offerStartDate').value;
+    var endDate = document.getElementById('offerEndDate').value;
+    var uniqueOnly = document.getElementById('offerUniqueOnly').checked;
+    var autoSelect = document.getElementById('offerAutoSelect').checked;
+
+    if (!title) return alert('الرجاء إدخال عنوان العرض');
+    if (offerSelectedProducts.length < pickCount) return alert('الرجاء اختيار ' + pickCount + ' منتجات على الأقل');
+
+    var data = {
+        type: 'combo',
+        title: title,
+        pickCount: pickCount,
+        comboPrice: comboPrice,
+        eligibleProducts: offerSelectedProducts.slice(),
+        uniqueOnly: uniqueOnly,
+        autoSelect: autoSelect,
+        startDate: startDate || '',
+        endDate: endDate || '',
+        active: true,
+        updatedAt: new Date().toISOString()
+    };
+
+    setAdminLoading(true);
+    try {
+        if (id) {
+            await db.collection('offers').doc(id).set(data, { merge: true });
+        } else {
+            data.createdAt = new Date().toISOString();
+            await db.collection('offers').add(data);
+        }
+        closeModal('offerModal');
+        setAdminStatus('تم حفظ العرض بنجاح!', 'success');
+    } catch (err) {
+        console.error(err);
+        setAdminStatus('فشل حفظ العرض: ' + err.message, 'error');
+    }
+    setAdminLoading(false);
+}
+
+async function deleteOffer(offerId) {
+    if (!confirm('هل أنتِ متأكدة من حذف هذا العرض؟')) return;
+    setAdminLoading(true);
+    try {
+        await db.collection('offers').doc(offerId).delete();
+        setAdminStatus('تم حذف العرض.', 'success');
+    } catch (err) {
+        console.error(err);
+        setAdminStatus('فشل حذف العرض.', 'error');
+    }
+    setAdminLoading(false);
 }
