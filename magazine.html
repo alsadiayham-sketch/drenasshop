@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enas Shop | Magazine Style</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Tajawal', sans-serif; background: #fafafa; color: #222; }
+
+        .nav {
+            position: fixed; top: 0; width: 100%; background: #fff; z-index: 100;
+            padding: 20px 50px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 3px solid #222;
+        }
+        .nav-logo { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 900; color: #222; }
+        .nav-links a { margin: 0 15px; color: #222; text-decoration: none; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
+
+        .hero {
+            min-height: 80vh; display: grid; grid-template-columns: 1fr 1fr;
+            padding-top: 80px;
+        }
+        .hero-left {
+            background: #222; color: #fff; display: flex; align-items: center;
+            justify-content: center; padding: 60px;
+        }
+        .hero-left h1 {
+            font-family: 'Playfair Display', serif; font-size: 4rem;
+            line-height: 1.1; font-weight: 900;
+        }
+        .hero-left h1 span { color: #ff6b6b; }
+        .hero-left p { margin-top: 20px; font-size: 1.1rem; color: #aaa; line-height: 1.8; }
+        .hero-right {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 180px; opacity: 0.4;
+        }
+
+        .marquee {
+            background: #222; color: #fff; padding: 12px 0;
+            overflow: hidden; white-space: nowrap;
+        }
+        .marquee-content {
+            display: inline-block; animation: marquee 20s linear infinite;
+            font-size: 0.85rem; letter-spacing: 3px; text-transform: uppercase;
+        }
+        @keyframes marquee { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
+
+        .products-section { padding: 80px 50px; max-width: 1400px; margin: 0 auto; }
+        .section-title {
+            font-family: 'Playfair Display', serif; font-size: 3rem;
+            margin-bottom: 50px; font-weight: 900;
+            border-bottom: 3px solid #222; padding-bottom: 15px; display: inline-block;
+        }
+
+        .products-grid {
+            display: grid; gap: 3px;
+            grid-template-columns: repeat(4, 1fr);
+        }
+        .product-card {
+            background: #fff; overflow: hidden; position: relative;
+            transition: all 0.3s; border: 1px solid #eee;
+        }
+        .product-card:hover { z-index: 2; transform: scale(1.02); box-shadow: 0 10px 40px rgba(0,0,0,0.15); }
+        .product-card img { width: 100%; height: 280px; object-fit: cover; }
+        .product-info { padding: 20px; }
+        .product-brand {
+            font-size: 0.65rem; text-transform: uppercase; letter-spacing: 3px;
+            color: #999; margin-bottom: 8px; font-weight: 700;
+        }
+        .product-name { font-size: 0.95rem; font-weight: 700; margin-bottom: 10px; }
+        .product-price { font-size: 1.3rem; font-weight: 900; }
+        .product-price span { font-size: 0.8rem; font-weight: 400; color: #999; }
+
+        .cta-section {
+            background: #222; color: #fff; padding: 80px 50px; text-align: center;
+            margin-top: 80px;
+        }
+        .cta-section h2 { font-family: 'Playfair Display', serif; font-size: 2.5rem; margin-bottom: 15px; }
+        .cta-section p { color: #888; margin-bottom: 25px; }
+        .cta-btn {
+            display: inline-block; padding: 14px 40px; background: #ff6b6b;
+            color: #fff; text-decoration: none; font-weight: 700; letter-spacing: 1px;
+        }
+
+        footer { text-align: center; padding: 30px; font-size: 0.85rem; color: #999; }
+        footer a { color: #222; text-decoration: none; font-weight: 700; }
+
+        .loading { text-align: center; padding: 60px; color: #999; grid-column: 1/-1; }
+
+        @media (max-width: 768px) {
+            .hero { grid-template-columns: 1fr; }
+            .hero-left h1 { font-size: 2.5rem; }
+            .hero-right { min-height: 200px; }
+            .products-grid { grid-template-columns: repeat(2, 1fr); }
+            .product-card img { height: 180px; }
+            .nav { padding: 15px 20px; }
+            .nav-logo { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-logo">ENAS</div>
+        <div class="nav-links">
+            <a href="#products">Shop</a>
+            <a href="https://www.instagram.com/dr_enas_shop/" target="_blank">IG</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-left">
+            <div>
+                <h1>العناية<br>بالبشرة<br><span>فن.</span></h1>
+                <p>مجموعة حصرية من أفضل منتجات العناية — مختارة بعين خبيرة</p>
+            </div>
+        </div>
+        <div class="hero-right">💄</div>
+    </section>
+
+    <div class="marquee">
+        <span class="marquee-content">
+            AXIS-Y ★ Beauty of Joseon ★ VT Cosmetics ★ SESDERMA ★ BioBalance ★ Hoppa ★ Neat ★ I LOVE ★ 
+            AXIS-Y ★ Beauty of Joseon ★ VT Cosmetics ★ SESDERMA ★ BioBalance ★ Hoppa ★ Neat ★ I LOVE ★
+        </span>
+    </div>
+
+    <section class="products-section" id="products">
+        <h2 class="section-title">THE EDIT</h2>
+        <div class="products-grid" id="productsGrid">
+            <div class="loading">جاري التحميل...</div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <h2>تواصلي معنا</h2>
+        <p>للطلب والاستفسار عبر WhatsApp أو Instagram</p>
+        <a href="https://wa.me/970595170026" class="cta-btn">WHATSAPP →</a>
+    </section>
+
+    <footer>
+        <p>ENAS SHOP | <a href="https://www.instagram.com/dr_enas_shop/">@dr_enas_shop</a></p>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+        (function() {
+            var grid = document.getElementById('productsGrid');
+            db.collection('products').orderBy('order').get().then(function(snap) {
+                if (snap.empty) { grid.innerHTML = '<p class="loading">لا توجد منتجات</p>'; return; }
+                var html = '';
+                snap.forEach(function(doc) {
+                    var p = doc.data();
+                    var price = p.sizes && p.sizes[0] ? p.sizes[0].price : p.price || 0;
+                    html += '<div class="product-card">' +
+                        '<img src="' + (p.image || '') + '" alt="' + p.name + '" onerror="this.style.display=\'none\'">' +
+                        '<div class="product-info">' +
+                        '<div class="product-brand">' + (p.brand || '') + '</div>' +
+                        '<div class="product-name">' + p.name + '</div>' +
+                        '<div class="product-price">₪' + price + ' <span>ILS</span></div>' +
+                        '</div></div>';
+                });
+                grid.innerHTML = html;
+            }).catch(function(e) { grid.innerHTML = '<p class="loading">خطأ</p>'; });
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enas Shop | Luxury Style</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Tajawal', sans-serif; background: #0a0a0a; color: #e8e0d4; }
+
+        .nav {
+            position: fixed; top: 0; width: 100%; background: rgba(10,10,10,0.95);
+            backdrop-filter: blur(20px); z-index: 100; padding: 20px 50px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid rgba(212,175,55,0.2);
+        }
+        .nav-logo { font-size: 1.5rem; font-weight: 900; color: #d4af37; letter-spacing: 3px; }
+        .nav-links a { margin: 0 20px; color: #b0a890; text-decoration: none; font-size: 0.9rem; letter-spacing: 1px; }
+        .nav-links a:hover { color: #d4af37; }
+
+        .hero {
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            text-align: center; padding: 40px;
+            background: radial-gradient(ellipse at center, #1a1510 0%, #0a0a0a 70%);
+            position: relative;
+        }
+        .hero::before {
+            content: ''; position: absolute; inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0L60 30L30 60L0 30z' fill='none' stroke='%23d4af37' stroke-width='0.3' opacity='0.1'/%3E%3C/svg%3E");
+        }
+        .hero-content { position: relative; z-index: 1; }
+        .hero-content h1 {
+            font-size: 4rem; font-weight: 900; color: #d4af37;
+            margin-bottom: 20px; letter-spacing: 2px;
+            text-shadow: 0 0 40px rgba(212,175,55,0.3);
+        }
+        .hero-content p {
+            font-size: 1.2rem; color: #b0a890; max-width: 600px;
+            margin: 0 auto 40px; line-height: 2;
+        }
+        .hero-cta {
+            display: inline-block; padding: 16px 50px;
+            border: 2px solid #d4af37; color: #d4af37;
+            text-decoration: none; font-size: 1rem; letter-spacing: 2px;
+            transition: all 0.4s;
+        }
+        .hero-cta:hover { background: #d4af37; color: #0a0a0a; }
+
+        .divider {
+            text-align: center; padding: 20px; color: #d4af37; opacity: 0.5;
+            font-size: 1.5rem; letter-spacing: 10px;
+        }
+
+        .products-section { padding: 80px 50px; max-width: 1400px; margin: 0 auto; }
+        .section-title {
+            text-align: center; font-size: 2rem; color: #d4af37;
+            margin-bottom: 10px; letter-spacing: 3px; font-weight: 300;
+        }
+        .section-subtitle {
+            text-align: center; color: #8a7a6a; margin-bottom: 60px;
+            font-size: 0.95rem; letter-spacing: 1px;
+        }
+
+        .products-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px;
+        }
+        .product-card {
+            background: #141414; border: 1px solid rgba(212,175,55,0.15);
+            border-radius: 4px; overflow: hidden; transition: all 0.4s;
+        }
+        .product-card:hover {
+            border-color: #d4af37;
+            box-shadow: 0 0 30px rgba(212,175,55,0.1);
+        }
+        .product-card img { width: 100%; height: 300px; object-fit: cover; filter: brightness(0.9); }
+        .product-card:hover img { filter: brightness(1); }
+        .product-info { padding: 25px; }
+        .product-brand {
+            font-size: 0.7rem; color: #d4af37; text-transform: uppercase;
+            letter-spacing: 3px; margin-bottom: 10px;
+        }
+        .product-name { font-size: 1.15rem; font-weight: 500; margin-bottom: 10px; color: #e8e0d4; }
+        .product-desc { font-size: 0.85rem; color: #7a7060; line-height: 1.6; margin-bottom: 15px; }
+        .product-price { font-size: 1.4rem; font-weight: 700; color: #d4af37; }
+
+        footer {
+            text-align: center; padding: 50px; border-top: 1px solid rgba(212,175,55,0.15);
+            color: #5a5040;
+        }
+        footer a { color: #d4af37; text-decoration: none; }
+
+        .loading { text-align: center; padding: 60px; color: #8a7a6a; }
+
+        @media (max-width: 768px) {
+            .hero-content h1 { font-size: 2.5rem; }
+            .products-grid { grid-template-columns: 1fr; }
+            .nav { padding: 15px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-logo">ENAS</div>
+        <div class="nav-links">
+            <a href="#products">COLLECTION</a>
+            <a href="https://www.instagram.com/dr_enas_shop/" target="_blank">INSTAGRAM</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1>ENAS SHOP</h1>
+            <p>تجربة فاخرة في عالم العناية بالبشرة — أرقى المنتجات العالمية مختارة خصيصاً لك</p>
+            <a href="#products" class="hero-cta">اكتشف المجموعة</a>
+        </div>
+    </section>
+
+    <div class="divider">◆ ◆ ◆</div>
+
+    <section class="products-section" id="products">
+        <h2 class="section-title">THE COLLECTION</h2>
+        <p class="section-subtitle">مجموعة حصرية من أفضل منتجات العناية</p>
+        <div class="products-grid" id="productsGrid">
+            <div class="loading">جاري التحميل...</div>
+        </div>
+    </section>
+
+    <footer>
+        <p>ENAS SHOP &copy; 2024 | <a href="https://www.instagram.com/dr_enas_shop/">@dr_enas_shop</a></p>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+        (function() {
+            var grid = document.getElementById('productsGrid');
+            db.collection('products').orderBy('order').get().then(function(snap) {
+                if (snap.empty) { grid.innerHTML = '<p class="loading">لا توجد منتجات</p>'; return; }
+                var html = '';
+                snap.forEach(function(doc) {
+                    var p = doc.data();
+                    var price = p.sizes && p.sizes[0] ? p.sizes[0].price : p.price || 0;
+                    html += '<div class="product-card">' +
+                        '<img src="' + (p.image || '') + '" alt="' + p.name + '" onerror="this.style.display=\'none\'">' +
+                        '<div class="product-info">' +
+                        '<div class="product-brand">' + (p.brand || '') + '</div>' +
+                        '<div class="product-name">' + p.name + '</div>' +
+                        '<div class="product-desc">' + (p.description || '').substring(0, 70) + '</div>' +
+                        '<div class="product-price">₪' + price + '</div>' +
+                        '</div></div>';
+                });
+                grid.innerHTML = html;
+            }).catch(function(e) { grid.innerHTML = '<p class="loading">خطأ في التحميل</p>'; });
+        })();
+    </script>
+</body>
+</html>

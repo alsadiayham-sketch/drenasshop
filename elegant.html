@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enas Shop | Elegant Style</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Tajawal', sans-serif; background: #fdf9f5; color: #3a2a1a; }
+
+        .nav {
+            position: fixed; top: 0; width: 100%; background: rgba(253,249,245,0.95);
+            backdrop-filter: blur(10px); z-index: 100; padding: 20px 50px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid #ece4da;
+        }
+        .nav-logo { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: #8b5e3c; }
+        .nav-links a { margin: 0 20px; color: #a08060; text-decoration: none; font-size: 0.9rem; letter-spacing: 0.5px; }
+
+        .hero {
+            min-height: 80vh; display: flex; align-items: center; justify-content: center;
+            padding: 100px 40px; text-align: center;
+            background: linear-gradient(180deg, #fdf9f5 0%, #f5ede4 100%);
+        }
+        .hero-content { max-width: 700px; }
+        .hero-label {
+            display: inline-block; padding: 6px 20px; border: 1px solid #c8a882;
+            border-radius: 50px; font-size: 0.8rem; color: #a08060;
+            margin-bottom: 25px; letter-spacing: 2px;
+        }
+        .hero h1 {
+            font-family: 'Playfair Display', serif; font-size: 3.5rem;
+            color: #5a3a20; margin-bottom: 20px; line-height: 1.3; font-weight: 400;
+        }
+        .hero p { font-size: 1.1rem; color: #a08060; line-height: 1.9; margin-bottom: 35px; }
+        .hero-cta {
+            display: inline-block; padding: 14px 40px; background: #8b5e3c; color: #fff;
+            border-radius: 4px; text-decoration: none; font-weight: 500; letter-spacing: 1px;
+        }
+
+        .products-section { padding: 80px 50px; max-width: 1300px; margin: 0 auto; }
+        .section-title {
+            font-family: 'Playfair Display', serif; text-align: center;
+            font-size: 2.2rem; color: #5a3a20; margin-bottom: 10px; font-weight: 400;
+        }
+        .section-divider {
+            width: 60px; height: 1px; background: #c8a882; margin: 15px auto 50px;
+        }
+
+        .products-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 35px;
+        }
+        .product-card {
+            background: #fff; overflow: hidden; transition: all 0.4s;
+            border: 1px solid #ece4da;
+        }
+        .product-card:hover { box-shadow: 0 15px 50px rgba(139,94,60,0.1); }
+        .product-card img { width: 100%; height: 320px; object-fit: cover; }
+        .product-info { padding: 25px; text-align: center; }
+        .product-brand {
+            font-size: 0.7rem; color: #c8a882; text-transform: uppercase;
+            letter-spacing: 3px; margin-bottom: 10px;
+        }
+        .product-name {
+            font-family: 'Playfair Display', serif; font-size: 1.1rem;
+            font-weight: 400; margin-bottom: 10px; color: #3a2a1a;
+        }
+        .product-desc { font-size: 0.85rem; color: #a09080; line-height: 1.6; margin-bottom: 15px; }
+        .product-price { font-size: 1.2rem; color: #8b5e3c; font-weight: 500; }
+
+        footer {
+            text-align: center; padding: 50px; background: #3a2a1a; color: #c8a882;
+        }
+        footer a { color: #d4b896; text-decoration: none; }
+
+        .loading { text-align: center; padding: 60px; color: #c8a882; font-style: italic; }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.2rem; }
+            .products-grid { grid-template-columns: 1fr; }
+            .nav { padding: 15px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-logo">Enas</div>
+        <div class="nav-links">
+            <a href="#products">المنتجات</a>
+            <a href="https://www.instagram.com/dr_enas_shop/" target="_blank">Instagram</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <span class="hero-label">SKINCARE BOUTIQUE</span>
+            <h1>أناقة تلامس بشرتك</h1>
+            <p>مجموعة راقية من مستحضرات العناية بالبشرة، مختارة بذوق رفيع لتمنحك إطلالة مشرقة وبشرة نضرة كل يوم</p>
+            <a href="#products" class="hero-cta">اكتشفي المجموعة</a>
+        </div>
+    </section>
+
+    <section class="products-section" id="products">
+        <h2 class="section-title">مجموعتنا المميزة</h2>
+        <div class="section-divider"></div>
+        <div class="products-grid" id="productsGrid">
+            <div class="loading">جاري التحميل...</div>
+        </div>
+    </section>
+
+    <footer>
+        <p>Enas Shop | <a href="https://www.instagram.com/dr_enas_shop/">@dr_enas_shop</a></p>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+        (function() {
+            var grid = document.getElementById('productsGrid');
+            db.collection('products').orderBy('order').get().then(function(snap) {
+                if (snap.empty) { grid.innerHTML = '<p class="loading">لا توجد منتجات</p>'; return; }
+                var html = '';
+                snap.forEach(function(doc) {
+                    var p = doc.data();
+                    var price = p.sizes && p.sizes[0] ? p.sizes[0].price : p.price || 0;
+                    html += '<div class="product-card">' +
+                        '<img src="' + (p.image || '') + '" alt="' + p.name + '" onerror="this.style.display=\'none\'">' +
+                        '<div class="product-info">' +
+                        '<div class="product-brand">' + (p.brand || '') + '</div>' +
+                        '<div class="product-name">' + p.name + '</div>' +
+                        '<div class="product-desc">' + (p.description || '').substring(0, 80) + '</div>' +
+                        '<div class="product-price">₪' + price + '</div>' +
+                        '</div></div>';
+                });
+                grid.innerHTML = html;
+            }).catch(function(e) { grid.innerHTML = '<p class="loading">خطأ في التحميل</p>'; });
+        })();
+    </script>
+</body>
+</html>

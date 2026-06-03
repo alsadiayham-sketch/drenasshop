@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enas Shop | Vibrant Style</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Tajawal', sans-serif; background: #fafafa; color: #222; }
+
+        .nav {
+            position: fixed; top: 0; width: 100%; background: #fff; z-index: 100;
+            padding: 15px 40px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.05);
+        }
+        .nav-logo {
+            font-size: 1.4rem; font-weight: 900;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24, #f368e0);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .nav-links a { margin: 0 12px; color: #555; text-decoration: none; font-weight: 500; }
+
+        .hero {
+            min-height: 85vh; display: flex; align-items: center; justify-content: center;
+            text-align: center; padding: 100px 40px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 25%, #f368e0 50%, #a55eea 75%, #5f27cd 100%);
+            position: relative;
+        }
+        .hero::after {
+            content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 100px;
+            background: linear-gradient(180deg, transparent, #fafafa);
+        }
+        .hero h1 { font-size: 4rem; font-weight: 900; color: #fff; margin-bottom: 20px; text-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        .hero p { font-size: 1.2rem; color: rgba(255,255,255,0.9); max-width: 500px; margin: 0 auto 30px; }
+        .hero-btn {
+            display: inline-block; padding: 15px 40px; background: #fff; color: #ee5a24;
+            border-radius: 50px; font-weight: 700; text-decoration: none; font-size: 1.1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .categories {
+            display: flex; justify-content: center; gap: 15px; padding: 40px;
+            flex-wrap: wrap; position: relative; z-index: 2; margin-top: -50px;
+        }
+        .cat-btn {
+            padding: 12px 25px; border-radius: 50px; font-weight: 600;
+            border: none; cursor: pointer; font-size: 0.9rem; font-family: inherit;
+            transition: transform 0.2s;
+        }
+        .cat-btn:hover { transform: scale(1.05); }
+        .cat-btn:nth-child(1) { background: #ff6b6b; color: #fff; }
+        .cat-btn:nth-child(2) { background: #feca57; color: #333; }
+        .cat-btn:nth-child(3) { background: #48dbfb; color: #333; }
+        .cat-btn:nth-child(4) { background: #ff9ff3; color: #333; }
+        .cat-btn:nth-child(5) { background: #55efc4; color: #333; }
+
+        .products-section { padding: 40px; max-width: 1400px; margin: 0 auto; }
+        .section-title { text-align: center; font-size: 2.5rem; font-weight: 900; margin-bottom: 40px; }
+
+        .products-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 25px;
+        }
+        .product-card {
+            background: #fff; border-radius: 20px; overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06); transition: all 0.3s;
+        }
+        .product-card:hover { transform: translateY(-8px) rotate(-1deg); box-shadow: 0 15px 40px rgba(0,0,0,0.12); }
+        .product-card:nth-child(even):hover { transform: translateY(-8px) rotate(1deg); }
+        .product-card img { width: 100%; height: 250px; object-fit: cover; }
+        .product-info { padding: 20px; }
+        .product-brand {
+            display: inline-block; padding: 4px 12px; border-radius: 50px;
+            font-size: 0.7rem; font-weight: 700; margin-bottom: 8px;
+            background: linear-gradient(135deg, #ff6b6b, #f368e0); color: #fff;
+        }
+        .product-name { font-size: 1rem; font-weight: 700; margin-bottom: 12px; }
+        .product-price { font-size: 1.3rem; font-weight: 900; color: #ee5a24; }
+
+        footer {
+            text-align: center; padding: 50px;
+            background: linear-gradient(135deg, #5f27cd, #a55eea); color: #fff;
+        }
+        footer a { color: #feca57; text-decoration: none; }
+
+        .loading { text-align: center; padding: 60px; color: #aaa; }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.5rem; }
+            .products-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+            .product-card img { height: 180px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-logo">ENAS SHOP</div>
+        <div class="nav-links">
+            <a href="#products">Shop</a>
+            <a href="https://www.instagram.com/dr_enas_shop/" target="_blank">📸</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div>
+            <h1>🔥 أحلى عناية</h1>
+            <p>منتجات عناية بالبشرة بألوان حياتك — جربي الفرق!</p>
+            <a href="#products" class="hero-btn">🛍️ تسوقي الآن</a>
+        </div>
+    </section>
+
+    <div class="categories">
+        <button class="cat-btn">عناية بالبشرة</button>
+        <button class="cat-btn">عناية بالشعر</button>
+        <button class="cat-btn">عناية بالجسم</button>
+        <button class="cat-btn">مكياج</button>
+        <button class="cat-btn">عطور</button>
+    </div>
+
+    <section class="products-section" id="products">
+        <h2 class="section-title">🛍️ منتجاتنا</h2>
+        <div class="products-grid" id="productsGrid">
+            <div class="loading">جاري التحميل...</div>
+        </div>
+    </section>
+
+    <footer>
+        <p>ENAS SHOP 🌟 | <a href="https://www.instagram.com/dr_enas_shop/">@dr_enas_shop</a></p>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+        (function() {
+            var grid = document.getElementById('productsGrid');
+            db.collection('products').orderBy('order').get().then(function(snap) {
+                if (snap.empty) { grid.innerHTML = '<p class="loading">لا توجد منتجات</p>'; return; }
+                var html = '';
+                snap.forEach(function(doc) {
+                    var p = doc.data();
+                    var price = p.sizes && p.sizes[0] ? p.sizes[0].price : p.price || 0;
+                    html += '<div class="product-card">' +
+                        '<img src="' + (p.image || '') + '" alt="' + p.name + '" onerror="this.style.display=\'none\'">' +
+                        '<div class="product-info">' +
+                        '<span class="product-brand">' + (p.brand || '') + '</span>' +
+                        '<div class="product-name">' + p.name + '</div>' +
+                        '<div class="product-price">₪' + price + '</div>' +
+                        '</div></div>';
+                });
+                grid.innerHTML = html;
+            }).catch(function(e) { grid.innerHTML = '<p class="loading">خطأ</p>'; });
+        })();
+    </script>
+</body>
+</html>

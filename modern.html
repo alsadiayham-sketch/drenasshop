@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enas Shop | Modern Style</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Tajawal', sans-serif; background: #f0f2f5; color: #1a1a2e; }
+
+        .nav {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            width: calc(100% - 40px); max-width: 1200px;
+            background: #fff; z-index: 100; padding: 15px 30px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .nav-logo { font-size: 1.2rem; font-weight: 900; color: #1a1a2e; }
+        .nav-links a {
+            margin: 0 10px; color: #fff; text-decoration: none; font-size: 0.85rem;
+            padding: 8px 18px; border-radius: 8px; background: #1a1a2e; font-weight: 500;
+        }
+
+        .hero {
+            min-height: 85vh; display: flex; align-items: center; padding: 120px 40px 60px;
+            max-width: 1200px; margin: 0 auto;
+        }
+        .hero-text { flex: 1; }
+        .hero-text h1 { font-size: 3.5rem; font-weight: 900; line-height: 1.2; margin-bottom: 20px; }
+        .hero-text h1 span {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .hero-text p { font-size: 1.1rem; color: #666; line-height: 1.8; margin-bottom: 30px; max-width: 450px; }
+        .hero-btn {
+            display: inline-flex; align-items: center; gap: 10px; padding: 15px 30px;
+            background: #1a1a2e; color: #fff; border-radius: 12px;
+            text-decoration: none; font-weight: 600;
+        }
+        .hero-shapes {
+            flex: 1; display: flex; justify-content: center; align-items: center;
+            position: relative; height: 400px;
+        }
+        .shape {
+            position: absolute; border-radius: 30px;
+        }
+        .shape-1 { width: 200px; height: 200px; background: linear-gradient(135deg, #00b894, #00cec9); top: 20%; right: 10%; transform: rotate(15deg); }
+        .shape-2 { width: 150px; height: 150px; background: linear-gradient(135deg, #fdcb6e, #f39c12); bottom: 20%; right: 30%; transform: rotate(-10deg); opacity: 0.8; }
+        .shape-3 { width: 100px; height: 100px; background: linear-gradient(135deg, #a29bfe, #6c5ce7); top: 40%; left: 10%; transform: rotate(25deg); opacity: 0.7; }
+
+        .products-section { padding: 60px 40px; max-width: 1200px; margin: 0 auto; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .section-header h2 { font-size: 1.8rem; font-weight: 900; }
+        .section-header span { color: #888; font-size: 0.9rem; }
+
+        .products-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;
+        }
+        .product-card {
+            background: #fff; border-radius: 20px; overflow: hidden;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.04); transition: all 0.3s;
+        }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .product-card img { width: 100%; height: 240px; object-fit: cover; }
+        .product-info { padding: 20px; }
+        .product-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .product-brand {
+            padding: 4px 10px; background: #f0f2f5; border-radius: 6px;
+            font-size: 0.7rem; font-weight: 600; color: #666;
+        }
+        .product-status {
+            width: 8px; height: 8px; border-radius: 50%; background: #00b894;
+        }
+        .product-name { font-size: 1rem; font-weight: 600; margin-bottom: 12px; }
+        .product-footer { display: flex; justify-content: space-between; align-items: center; }
+        .product-price { font-size: 1.2rem; font-weight: 900; color: #1a1a2e; }
+        .product-add {
+            width: 36px; height: 36px; border-radius: 10px; background: #1a1a2e;
+            color: #fff; border: none; font-size: 1.2rem; cursor: pointer;
+        }
+
+        footer { text-align: center; padding: 40px; color: #999; }
+        footer a { color: #00b894; text-decoration: none; }
+
+        .loading { text-align: center; padding: 60px; color: #999; }
+
+        @media (max-width: 768px) {
+            .hero { flex-direction: column; text-align: center; padding-top: 100px; }
+            .hero-text h1 { font-size: 2.5rem; }
+            .hero-text p { max-width: 100%; }
+            .hero-shapes { display: none; }
+            .products-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .nav { top: 10px; width: calc(100% - 20px); }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-logo">Enas Shop</div>
+        <div class="nav-links">
+            <a href="#products">تسوق</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-text">
+            <h1>بشرتك تستحق <span>الأفضل</span></h1>
+            <p>منتجات عناية حديثة ومبتكرة من أفضل الماركات العالمية — نتائج تشوفيها من أول استخدام</p>
+            <a href="#products" class="hero-btn">← تصفح المنتجات</a>
+        </div>
+        <div class="hero-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+    </section>
+
+    <section class="products-section" id="products">
+        <div class="section-header">
+            <h2>المنتجات</h2>
+            <span id="productsCount"></span>
+        </div>
+        <div class="products-grid" id="productsGrid">
+            <div class="loading">loading...</div>
+        </div>
+    </section>
+
+    <footer>
+        <p>Enas Shop | <a href="https://www.instagram.com/dr_enas_shop/">@dr_enas_shop</a></p>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+        (function() {
+            var grid = document.getElementById('productsGrid');
+            db.collection('products').orderBy('order').get().then(function(snap) {
+                if (snap.empty) { grid.innerHTML = '<p class="loading">لا توجد منتجات</p>'; return; }
+                document.getElementById('productsCount').textContent = snap.size + ' منتج';
+                var html = '';
+                snap.forEach(function(doc) {
+                    var p = doc.data();
+                    var price = p.sizes && p.sizes[0] ? p.sizes[0].price : p.price || 0;
+                    html += '<div class="product-card">' +
+                        '<img src="' + (p.image || '') + '" alt="' + p.name + '" onerror="this.style.display=\'none\'">' +
+                        '<div class="product-info">' +
+                        '<div class="product-top"><span class="product-brand">' + (p.brand || '') + '</span><div class="product-status"></div></div>' +
+                        '<div class="product-name">' + p.name + '</div>' +
+                        '<div class="product-footer"><span class="product-price">₪' + price + '</span><button class="product-add">+</button></div>' +
+                        '</div></div>';
+                });
+                grid.innerHTML = html;
+            }).catch(function(e) { grid.innerHTML = '<p class="loading">error</p>'; });
+        })();
+    </script>
+</body>
+</html>

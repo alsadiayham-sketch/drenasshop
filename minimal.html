@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enas Shop | Minimal Style</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Tajawal', sans-serif; background: #fff; color: #222; }
+
+        .nav {
+            position: fixed; top: 0; width: 100%; background: #fff; z-index: 100;
+            padding: 25px 60px; display: flex; align-items: center; justify-content: space-between;
+        }
+        .nav-logo { font-size: 1.2rem; font-weight: 700; color: #222; }
+        .nav-links a { margin: 0 20px; color: #888; text-decoration: none; font-size: 0.9rem; }
+        .nav-links a:hover { color: #222; }
+
+        .hero {
+            min-height: 70vh; display: flex; align-items: center; justify-content: center;
+            padding: 120px 60px 60px; text-align: center;
+        }
+        .hero h1 { font-size: 3rem; font-weight: 300; color: #222; margin-bottom: 20px; }
+        .hero p { font-size: 1.1rem; color: #999; max-width: 500px; margin: 0 auto; line-height: 1.8; }
+
+        .products-section { padding: 40px 60px 100px; max-width: 1200px; margin: 0 auto; }
+        .products-count { font-size: 0.85rem; color: #bbb; margin-bottom: 40px; }
+
+        .products-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 40px;
+        }
+        .product-card { cursor: pointer; }
+        .product-card img {
+            width: 100%; height: 320px; object-fit: cover;
+            background: #f5f5f5; margin-bottom: 15px;
+        }
+        .product-brand { font-size: 0.75rem; color: #bbb; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
+        .product-name { font-size: 0.95rem; font-weight: 400; margin-bottom: 8px; color: #333; }
+        .product-price { font-size: 1rem; font-weight: 500; color: #222; }
+
+        footer {
+            text-align: center; padding: 40px; color: #ccc; font-size: 0.85rem;
+            border-top: 1px solid #f0f0f0;
+        }
+        footer a { color: #888; text-decoration: none; }
+
+        .loading { text-align: center; padding: 60px; color: #ccc; font-weight: 300; }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2rem; }
+            .nav { padding: 20px 25px; }
+            .products-section { padding: 40px 25px; }
+            .products-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+            .product-card img { height: 200px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-logo">enas shop</div>
+        <div class="nav-links">
+            <a href="#products">shop</a>
+            <a href="https://www.instagram.com/dr_enas_shop/" target="_blank">ig</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div>
+            <h1>عناية بسيطة. نتائج مذهلة.</h1>
+            <p>منتجات عناية أساسية بدون تعقيد — فقط ما تحتاجه بشرتك</p>
+        </div>
+    </section>
+
+    <section class="products-section" id="products">
+        <div class="products-count" id="productsCount"></div>
+        <div class="products-grid" id="productsGrid">
+            <div class="loading">loading...</div>
+        </div>
+    </section>
+
+    <footer>
+        <p>enas shop — <a href="https://www.instagram.com/dr_enas_shop/">@dr_enas_shop</a></p>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+        (function() {
+            var grid = document.getElementById('productsGrid');
+            var countEl = document.getElementById('productsCount');
+            db.collection('products').orderBy('order').get().then(function(snap) {
+                if (snap.empty) { grid.innerHTML = '<p class="loading">no products</p>'; return; }
+                countEl.textContent = snap.size + ' products';
+                var html = '';
+                snap.forEach(function(doc) {
+                    var p = doc.data();
+                    var price = p.sizes && p.sizes[0] ? p.sizes[0].price : p.price || 0;
+                    html += '<div class="product-card">' +
+                        '<img src="' + (p.image || '') + '" alt="' + p.name + '" onerror="this.src=\'data:image/svg+xml,%3Csvg xmlns=%2527http://www.w3.org/2000/svg%2527 width=%2527400%2527 height=%2527400%2527%3E%3Crect fill=%2527%2523f5f5f5%2527 width=%2527400%2527 height=%2527400%2527/%3E%3C/svg%3E\'">' +
+                        '<div class="product-brand">' + (p.brand || '') + '</div>' +
+                        '<div class="product-name">' + p.name + '</div>' +
+                        '<div class="product-price">₪' + price + '</div>' +
+                        '</div>';
+                });
+                grid.innerHTML = html;
+            }).catch(function(e) { grid.innerHTML = '<p class="loading">error</p>'; });
+        })();
+    </script>
+</body>
+</html>
