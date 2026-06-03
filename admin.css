@@ -261,3 +261,19 @@ html, body { font-family: 'Tajawal', sans-serif; background: #fafaf8; color: #1a
 .offer-product-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; margin-bottom: 6px; }
 .offer-product-item span { font-size: 0.75rem; line-height: 1.2; }
 .offer-product-check { position: absolute; top: 4px; right: 4px; background: #0066cc; color: #fff; width: 18px; height: 18px; border-radius: 50%; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; }
+
+/* Checkbox alignment */
+.checkbox-field { display: flex; align-items: center; gap: 8px; }
+.checkbox-field input[type="checkbox"] { width: 18px; height: 18px; margin: 0; cursor: pointer; accent-color: #0066cc; }
+.checkbox-field label { margin: 0; cursor: pointer; font-size: 0.9rem; }
+
+/* Packages List */
+.packages-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.package-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; }
+.package-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.package-card h4 { font-size: 1rem; color: #1a2a3a; margin: 0; }
+.package-card-actions button { background: none; border: none; cursor: pointer; font-size: 1rem; margin-left: 4px; }
+.package-card-price { font-size: 1.3rem; font-weight: 700; color: #0066cc; margin-bottom: 8px; }
+.package-card-products { display: flex; flex-wrap: wrap; gap: 6px; }
+.package-card-products img { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; border: 1px solid #e5e7eb; }
+.package-card-desc { font-size: 0.8rem; color: #6b7280; margin-top: 8px; }

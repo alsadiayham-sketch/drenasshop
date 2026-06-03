@@ -13,6 +13,7 @@ var usedFallbackData = false;
 var comboOffers = [];
 var comboSelectedIds = [];
 var currentComboOffer = null;
+var storePackages = [];
 var unsubscribers = [];
 var storeLoadState = {
     products: false,
@@ -165,6 +166,17 @@ function subscribeToStoreData() {
         });
         renderComboBanner();
         renderComboOffersSection();
+    }, function () { /* ignore */ }));
+
+    // Subscribe to packages
+    unsubscribers.push(db.collection('packages').onSnapshot(function (snapshot) {
+        storePackages = [];
+        snapshot.forEach(function(doc) {
+            var d = doc.data();
+            d.id = doc.id;
+            if (d.active !== false) storePackages.push(d);
+        });
+        renderPackagesBanner();
     }, function () { /* ignore */ }));
 }
 
@@ -1228,12 +1240,9 @@ function openComboModal(initialSelection, offerId) {
     document.getElementById('comboTotal').textContent = currentComboOffer.pickCount || 4;
     document.getElementById('comboPrice').textContent = '₪' + (currentComboOffer.comboPrice || 0);
 
-    // Auto-select first N products if autoSelect is true and no initial selection
-    var eligible = (currentComboOffer.eligibleProducts || []);
+    // Use initial selection if editing, otherwise start empty
     if (initialSelection && initialSelection.length > 0) {
         comboSelectedIds = initialSelection.slice();
-    } else if (currentComboOffer.autoSelect) {
-        comboSelectedIds = eligible.slice(0, currentComboOffer.pickCount || 4);
     } else {
         comboSelectedIds = [];
     }
@@ -1341,13 +1350,16 @@ function renderCartItems() {
     }
     if (footer) footer.style.display = 'block';
 
-    // Separate combo items from regular items
+    // Separate combo items, packages, and regular items
     var comboGroups = {};
+    var packageItems = [];
     var regularItems = [];
     cart.forEach(function(item) {
         if (item.comboOfferId) {
             if (!comboGroups[item.comboOfferId]) comboGroups[item.comboOfferId] = { title: item.comboTitle || 'عرض خاص', items: [], offerId: item.comboOfferId };
             comboGroups[item.comboOfferId].items.push(item);
+        } else if (item.type === 'package') {
+            packageItems.push(item);
         } else {
             regularItems.push(item);
         }
@@ -1371,6 +1383,24 @@ function renderCartItems() {
         });
         html += '</div>';
         html += '<button class="btn-clear-cart" style="font-size:0.75rem;padding:4px 10px;margin-top:8px;" onclick="removeCombo(\'' + offerId + '\')">حذف العرض</button>';
+        html += '</div>';
+    });
+
+    // Render package items
+    packageItems.forEach(function(item) {
+        var productNames = (item.packageProducts || []).map(function(pid) {
+            var p = products.find(function(pr) { return pr.id === pid; });
+            return p ? p.name : '';
+        }).filter(Boolean).join('، ');
+        html += '<div class="cart-item cart-package-item">';
+        html += '<div style="width:50px;height:50px;background:#eff6ff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">📦</div>';
+        html += '<div class="cart-item-info"><h4>' + (item.packageName || 'باقة') + '</h4>';
+        html += '<span class="cart-item-size" style="font-size:0.7rem;color:#6b7280;">' + productNames + '</span>';
+        html += '<span class="cart-item-price">₪' + item.price + '</span></div>';
+        html += '<div class="cart-item-qty"><button onclick="changeCartQty(\'' + item.id + '\', 0, -1)">−</button>';
+        html += '<span>' + item.qty + '</span>';
+        html += '<button onclick="changeCartQty(\'' + item.id + '\', 0, 1)">+</button></div>';
+        html += '<button class="cart-item-remove" onclick="removeFromCart(\'' + item.id + '\', 0)">✕</button>';
         html += '</div>';
     });
 
@@ -1430,4 +1460,68 @@ function removeFromCart(itemId, sizeIdx) {
     updateCartBadge();
     updateCheckoutLink(updateCartTotal());
     renderCartItems();
+}
+
+// ===== Packages System =====
+function renderPackagesBanner() {
+    var banner = document.getElementById('packagesBanner');
+    if (!banner) return;
+    if (storePackages.length === 0) { banner.style.display = 'none'; return; }
+    banner.style.display = 'flex';
+}
+
+function openPackagesPopup() {
+    var modal = document.getElementById('packagesModal');
+    if (!modal) return;
+    var grid = document.getElementById('packagesGrid');
+    if (!grid) return;
+    grid.innerHTML = storePackages.map(function(pkg) {
+        var productsHTML = (pkg.products || []).map(function(pid) {
+            var p = products.find(function(pr) { return pr.id === pid; });
+            if (!p) return '';
+            return '<div class="pkg-product-item"><img src="' + p.image + '" onerror="this.src=\'' + FALLBACK_IMAGE + '\'"><span>' + p.name + '</span></div>';
+        }).join('');
+        return '<div class="pkg-card">' +
+            '<h3>' + (pkg.name || 'باقة') + '</h3>' +
+            (pkg.description ? '<p class="pkg-desc">' + pkg.description + '</p>' : '') +
+            '<div class="pkg-price">₪' + (pkg.price || 0) + '</div>' +
+            '<div class="pkg-products-list">' + productsHTML + '</div>' +
+            '<button class="btn-primary pkg-add-btn" onclick="addPackageToCart(\'' + pkg.id + '\')">أضيفي للسلة</button>' +
+            '</div>';
+    }).join('');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closePackagesPopup() {
+    var modal = document.getElementById('packagesModal');
+    if (modal) modal.style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+function addPackageToCart(pkgId) {
+    var pkg = storePackages.find(function(p) { return p.id === pkgId; });
+    if (!pkg) return;
+    // Add as a single cart item (type: package, no editing)
+    var existingIdx = -1;
+    cart.forEach(function(item, i) { if (item.id === 'pkg__' + pkgId) existingIdx = i; });
+    if (existingIdx !== -1) {
+        cart[existingIdx].qty += 1;
+    } else {
+        cart.push({
+            id: 'pkg__' + pkgId,
+            type: 'package',
+            packageId: pkgId,
+            packageName: pkg.name,
+            packageProducts: pkg.products || [],
+            price: pkg.price || 0,
+            qty: 1,
+            sizeIdx: 0
+        });
+    }
+    saveCart();
+    updateCartBadge();
+    updateCheckoutLink(updateCartTotal());
+    renderCartItems();
+    closePackagesPopup();
 }

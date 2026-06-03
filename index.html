@@ -245,6 +245,24 @@
         </div>
     </div>
 
+    <!-- Packages Floating Banner -->
+    <div class="packages-banner" id="packagesBanner" style="display:none;" onclick="openPackagesPopup()">
+        <span>📦</span> اختاري باكيج بسعر خاص
+    </div>
+
+    <!-- Packages Modal -->
+    <div class="modal-overlay combo-overlay" id="packagesModal" style="display:none;" onclick="closePackagesPopup()">
+        <div class="combo-modal packages-modal-content" onclick="event.stopPropagation()">
+            <button class="pdp-close" onclick="closePackagesPopup()">✕</button>
+            <div class="combo-modal-header">
+                <span class="combo-icon">📦</span>
+                <h2>باقاتنا الخاصة</h2>
+                <p>اختاري باقة كاملة بسعر مميز</p>
+            </div>
+            <div class="packages-grid" id="packagesGrid"></div>
+        </div>
+    </div>
+
     <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
     <div class="cart-sidebar" id="cartSidebar">
         <div class="cart-header">

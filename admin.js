@@ -173,6 +173,11 @@ function subscribeToCollections() {
         offers = snapshot.docs.map(function (docSnap) { var d = docSnap.data(); d.id = docSnap.id; return d; });
         renderOffersList();
     }, function (error) { console.error('Offers load error', error); }));
+
+    unsubscribers.push(db.collection('packages').onSnapshot(function (snapshot) {
+        packages = snapshot.docs.map(function (docSnap) { var d = docSnap.data(); d.id = docSnap.id; return d; });
+        renderPackagesList();
+    }, function (error) { console.error('Packages load error', error); }));
 }
 
 function checkAdminReady() {
@@ -1008,7 +1013,6 @@ function openOfferModal(existingOffer) {
     document.getElementById('offerStartDate').value = existingOffer ? (existingOffer.startDate || '') : '';
     document.getElementById('offerEndDate').value = existingOffer ? (existingOffer.endDate || '') : '';
     document.getElementById('offerUniqueOnly').checked = existingOffer ? (existingOffer.uniqueOnly !== false) : true;
-    document.getElementById('offerAutoSelect').checked = existingOffer ? !!existingOffer.autoSelect : false;
     offerSelectedProducts = existingOffer ? (existingOffer.eligibleProducts || []).slice() : [];
     renderOfferProductsGrid();
     modal.style.display = 'flex';
@@ -1056,7 +1060,6 @@ async function saveOffer() {
     var startDate = document.getElementById('offerStartDate').value;
     var endDate = document.getElementById('offerEndDate').value;
     var uniqueOnly = document.getElementById('offerUniqueOnly').checked;
-    var autoSelect = document.getElementById('offerAutoSelect').checked;
 
     if (!title) return alert('الرجاء إدخال عنوان العرض');
     if (offerSelectedProducts.length < pickCount) return alert('الرجاء اختيار ' + pickCount + ' منتجات على الأقل');
@@ -1068,7 +1071,6 @@ async function saveOffer() {
         comboPrice: comboPrice,
         eligibleProducts: offerSelectedProducts.slice(),
         uniqueOnly: uniqueOnly,
-        autoSelect: autoSelect,
         startDate: startDate || '',
         endDate: endDate || '',
         active: true,
@@ -1101,6 +1103,128 @@ async function deleteOffer(offerId) {
     } catch (err) {
         console.error(err);
         setAdminStatus('فشل حذف العرض.', 'error');
+    }
+    setAdminLoading(false);
+}
+
+// ===== Packages Management =====
+var packages = [];
+var packageSelectedProducts = [];
+
+function renderPackagesList() {
+    var container = document.getElementById('packagesListContainer');
+    if (!container) return;
+    if (packages.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:30px;color:#888;"><p>لا توجد باقات حالياً</p></div>';
+        return;
+    }
+    container.innerHTML = packages.map(function(pkg) {
+        var productsHTML = (pkg.products || []).map(function(pid) {
+            var p = products.find(function(pr) { return pr.id === pid; });
+            if (!p) return '';
+            return '<img src="' + p.image + '" alt="' + p.name + '" title="' + p.name + '" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">';
+        }).join('');
+        return '<div class="package-card">' +
+            '<div class="package-card-header"><h4>📦 ' + (pkg.name || 'باقة') + '</h4><div class="package-card-actions"><button onclick="editPackage(\'' + pkg.id + '\')" title="تعديل">✏️</button><button onclick="deletePackage(\'' + pkg.id + '\')" title="حذف">🗑️</button></div></div>' +
+            '<div class="package-card-price">₪' + (pkg.price || 0) + '</div>' +
+            '<div class="package-card-products">' + productsHTML + '</div>' +
+            (pkg.description ? '<div class="package-card-desc">' + pkg.description + '</div>' : '') +
+            '</div>';
+    }).join('');
+}
+
+function openPackageModal(existing) {
+    var modal = document.getElementById('packageModal');
+    if (!modal) return;
+    document.getElementById('packageModalTitle').textContent = existing ? 'تعديل الباقة' : 'إضافة باقة جديدة';
+    document.getElementById('packageId').value = existing ? existing.id : '';
+    document.getElementById('packageName').value = existing ? (existing.name || '') : '';
+    document.getElementById('packagePrice').value = existing ? (existing.price || 100) : 100;
+    document.getElementById('packageDesc').value = existing ? (existing.description || '') : '';
+    packageSelectedProducts = existing ? (existing.products || []).slice() : [];
+    renderPackageProductsGrid();
+    modal.style.display = 'flex';
+}
+
+function editPackage(pkgId) {
+    var pkg = packages.find(function(p) { return p.id === pkgId; });
+    if (pkg) openPackageModal(pkg);
+}
+
+function renderPackageProductsGrid() {
+    var grid = document.getElementById('packageProductsGrid');
+    if (!grid) return;
+    var search = (document.getElementById('packageProductSearch') || {}).value || '';
+    var filtered = products.filter(function(p) {
+        if (!search.trim()) return true;
+        return p.name.indexOf(search.trim()) !== -1 || (p.brand || '').indexOf(search.trim()) !== -1;
+    });
+    grid.innerHTML = filtered.map(function(p) {
+        var isSelected = packageSelectedProducts.indexOf(p.id) !== -1;
+        return '<div class="offer-product-item' + (isSelected ? ' selected' : '') + '" onclick="togglePackageProduct(\'' + p.id + '\')">' +
+            '<img src="' + p.image + '" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">' +
+            '<span>' + p.name + '</span>' +
+            (isSelected ? '<span class="offer-product-check">✓</span>' : '') +
+            '</div>';
+    }).join('');
+    var countEl = document.getElementById('packageSelectedCount');
+    if (countEl) countEl.textContent = packageSelectedProducts.length;
+}
+
+function filterPackageProducts() { renderPackageProductsGrid(); }
+
+function togglePackageProduct(pid) {
+    var idx = packageSelectedProducts.indexOf(pid);
+    if (idx !== -1) packageSelectedProducts.splice(idx, 1);
+    else packageSelectedProducts.push(pid);
+    renderPackageProductsGrid();
+}
+
+async function savePackage() {
+    var id = document.getElementById('packageId').value;
+    var name = document.getElementById('packageName').value.trim();
+    var price = parseFloat(document.getElementById('packagePrice').value) || 100;
+    var description = document.getElementById('packageDesc').value.trim();
+
+    if (!name) return alert('الرجاء إدخال اسم الباقة');
+    if (packageSelectedProducts.length < 2) return alert('الرجاء اختيار منتجين على الأقل');
+
+    var data = {
+        type: 'package',
+        name: name,
+        price: price,
+        description: description,
+        products: packageSelectedProducts.slice(),
+        active: true,
+        updatedAt: new Date().toISOString()
+    };
+
+    setAdminLoading(true);
+    try {
+        if (id) {
+            await db.collection('packages').doc(id).set(data, { merge: true });
+        } else {
+            data.createdAt = new Date().toISOString();
+            await db.collection('packages').add(data);
+        }
+        closeModal('packageModal');
+        setAdminStatus('تم حفظ الباقة بنجاح!', 'success');
+    } catch (err) {
+        console.error(err);
+        setAdminStatus('فشل حفظ الباقة: ' + err.message, 'error');
+    }
+    setAdminLoading(false);
+}
+
+async function deletePackage(pkgId) {
+    if (!confirm('هل أنتِ متأكدة من حذف هذه الباقة؟')) return;
+    setAdminLoading(true);
+    try {
+        await db.collection('packages').doc(pkgId).delete();
+        setAdminStatus('تم حذف الباقة.', 'success');
+    } catch (err) {
+        console.error(err);
+        setAdminStatus('فشل حذف الباقة.', 'error');
     }
     setAdminLoading(false);
 }

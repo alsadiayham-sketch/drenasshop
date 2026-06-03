@@ -55,7 +55,7 @@
 
         <div class="tab-content" id="tab-products">
             <div class="tab-header">
-                <h3>إدارة المنتجات والخصومات</h3>
+                <h3>إدارة المنتجات</h3>
                 <div class="header-actions">
                     <button class="btn-add" onclick="openProductModal()">إضافة منتج</button>
                 </div>
@@ -82,6 +82,24 @@
             </div>
 
             <div class="tab-header nested-header">
+                <h3>الباقات الثابتة</h3>
+                <button class="btn-add" onclick="openPackageModal()">إضافة باقة</button>
+            </div>
+            <p style="color:#6b7280; margin-bottom:12px; font-size:0.85rem;">باقات ثابتة من منتجات محددة بسعر واحد. الزبون يشتري الباقة كاملة بدون تعديل.</p>
+            <div class="packages-list" id="packagesListContainer"></div>
+        </div>
+
+        <div class="tab-content" id="tab-offers">
+            <div class="tab-header">
+                <h3>إدارة العروض والخصومات</h3>
+                <div class="header-actions">
+                    <button class="btn-add" onclick="openOfferModal()">إضافة عرض كومبو</button>
+                </div>
+            </div>
+            <p style="color:#6b7280; margin-bottom:20px; font-size:0.9rem;">عروض كومبو: يختار الزبون عدد معين من المنتجات بسعر ثابت. العروض تظهر تلقائياً على الموقع حسب التواريخ.</p>
+            <div class="offers-list" id="offersListContainer"></div>
+
+            <div class="tab-header nested-header" style="margin-top:30px;">
                 <h3>إدارة الخصومات</h3>
                 <button class="btn-add" onclick="openDiscountModal()">إضافة خصم</button>
             </div>
@@ -90,17 +108,6 @@
                 <thead><tr><th>النوع</th><th>القيمة</th><th>نسبة الخصم</th><th>ينتهي</th><th>الوصف</th><th>إجراءات</th></tr></thead>
                 <tbody id="discountsTableBody"></tbody>
             </table>
-        </div>
-
-        <div class="tab-content" id="tab-offers">
-            <div class="tab-header">
-                <h3>إدارة العروض (Combo)</h3>
-                <div class="header-actions">
-                    <button class="btn-add" onclick="openOfferModal()">إضافة عرض</button>
-                </div>
-            </div>
-            <p style="color:#6b7280; margin-bottom:20px; font-size:0.9rem;">أنشئي عروض باقات (كومبو) يختار فيها الزبون عدد معين من المنتجات بسعر ثابت. العروض تظهر تلقائياً على الموقع حسب التواريخ.</p>
-            <div class="offers-list" id="offersListContainer"></div>
         </div>
 
         <div class="tab-content" id="tab-hero">
@@ -250,11 +257,9 @@
                     <div class="form-group"><label>تاريخ البداية (اختياري)</label><input type="date" id="offerStartDate"></div>
                     <div class="form-group"><label>تاريخ الانتهاء (اختياري)</label><input type="date" id="offerEndDate"></div>
                 </div>
-                <div class="form-group">
-                    <label><input type="checkbox" id="offerUniqueOnly" checked> يجب اختيار منتجات مختلفة (بدون تكرار)</label>
-                </div>
-                <div class="form-group">
-                    <label><input type="checkbox" id="offerAutoSelect"> اختيار تلقائي لأول المنتجات عند فتح العرض</label>
+                <div class="form-group checkbox-field">
+                    <input type="checkbox" id="offerUniqueOnly" checked>
+                    <label for="offerUniqueOnly">يجب اختيار منتجات مختلفة (بدون تكرار)</label>
                 </div>
                 <div class="form-group">
                     <label>المنتجات المشاركة في العرض</label>
@@ -263,6 +268,26 @@
                     <small style="color:#888;margin-top:5px;display:block;"><span id="offerSelectedCount">0</span> منتج مختار</small>
                 </div>
                 <div class="modal-actions"><button type="submit" class="btn-save">حفظ العرض</button><button type="button" class="btn-cancel" onclick="closeModal('offerModal')">إلغاء</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Package Modal -->
+    <div class="modal-overlay" id="packageModal" style="display:none;">
+        <div class="modal">
+            <h3 id="packageModalTitle">إضافة باقة جديدة</h3>
+            <form onsubmit="event.preventDefault(); savePackage()">
+                <input type="hidden" id="packageId">
+                <div class="form-group"><label>اسم الباقة</label><input type="text" id="packageName" placeholder="مثال: باقة العناية الكاملة" required></div>
+                <div class="form-group"><label>سعر الباقة (₪)</label><input type="number" id="packagePrice" value="100" min="1" required></div>
+                <div class="form-group"><label>وصف (اختياري)</label><input type="text" id="packageDesc" placeholder="وصف قصير يظهر للزبون"></div>
+                <div class="form-group">
+                    <label>منتجات الباقة</label>
+                    <div class="offer-products-search"><input type="text" id="packageProductSearch" placeholder="ابحثي عن منتج..." oninput="filterPackageProducts()"></div>
+                    <div class="offer-products-grid" id="packageProductsGrid"></div>
+                    <small style="color:#888;margin-top:5px;display:block;"><span id="packageSelectedCount">0</span> منتج مختار</small>
+                </div>
+                <div class="modal-actions"><button type="submit" class="btn-save">حفظ الباقة</button><button type="button" class="btn-cancel" onclick="closeModal('packageModal')">إلغاء</button></div>
             </form>
         </div>
     </div>
