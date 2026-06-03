@@ -99,6 +99,12 @@
 
         .loading { text-align: center; padding: 60px; font-size: 1.2rem; color: #7a8a70; }
 
+        .product-card.hidden { display: none; }
+        .filters-section { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 30px 40px 0; max-width: 1400px; margin: 0 auto; }
+        .filter-btn { padding: 8px 18px; border-radius: 50px; border: 1px solid #d4c5b0; background: transparent; cursor: pointer; font-family: inherit; font-size: 0.8rem; font-weight: 500; transition: all 0.3s; color: #5a7a50; }
+        .filter-btn.active { background: #4a6741; color: #fff; border-color: #4a6741; }
+        .filter-btn:hover { border-color: #4a6741; }
+
         @media (max-width: 768px) {
             .hero h1 { font-size: 2.2rem; }
             .features { grid-template-columns: 1fr; }
@@ -142,6 +148,8 @@
         </div>
     </div>
 
+    <div class="filters-section" id="filters"></div>
+
     <section class="products-section" id="products">
         <h2 class="section-title">منتجاتنا الطبيعية</h2>
         <p class="section-subtitle">اكتشفي مجموعتنا المميزة من منتجات العناية بالبشرة</p>
@@ -160,20 +168,34 @@
     <script>
         (function() {
             var grid = document.getElementById('productsGrid');
+            var filtersEl = document.getElementById('filters');
+            var currentFilter = 'all';
             db.collection('products').orderBy('order').get().then(function(snap) {
                 if (snap.empty) { grid.innerHTML = '<p class="loading">لا توجد منتجات</p>'; return; }
+                var categories = new Set(), brands = new Set(), products = [];
+                snap.forEach(function(doc) { var p = doc.data(); products.push(p); if (p.category) categories.add(p.category); if (p.brand) brands.add(p.brand); });
+                var fh = '<button class="filter-btn active" data-filter="all">الكل</button>';
+                categories.forEach(function(c) { fh += '<button class="filter-btn" data-filter="cat:'+c+'">'+c+'</button>'; });
+                brands.forEach(function(b) { fh += '<button class="filter-btn" data-filter="brand:'+b+'">'+b+'</button>'; });
+                filtersEl.innerHTML = fh;
+                filtersEl.addEventListener('click', function(e) {
+                    if (!e.target.classList.contains('filter-btn')) return;
+                    filtersEl.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
+                    e.target.classList.add('active'); currentFilter = e.target.getAttribute('data-filter');
+                    grid.querySelectorAll('.product-card').forEach(function(card) {
+                        var show = currentFilter==='all'||(currentFilter==='cat:'+card.dataset.category)||(currentFilter==='brand:'+card.dataset.brand);
+                        card.classList.toggle('hidden',!show);
+                    });
+                });
                 var html = '';
-                snap.forEach(function(doc) {
-                    var p = doc.data();
+                products.forEach(function(p) {
                     var price = p.sizes && p.sizes[0] ? p.sizes[0].price : p.price || 0;
-                    html += '<div class="product-card">' +
-                        '<img src="' + (p.image || '') + '" alt="' + p.name + '" onerror="this.style.display=\'none\'">' +
-                        '<div class="product-info">' +
-                        '<div class="product-brand">' + (p.brand || '') + '</div>' +
-                        '<div class="product-name">' + p.name + '</div>' +
-                        '<div class="product-desc">' + (p.description || '').substring(0, 80) + '</div>' +
-                        '<div class="product-price">₪' + price + ' <span>ILS</span></div>' +
-                        '</div></div>';
+                    html += '<div class="product-card" data-category="'+(p.category||'')+'" data-brand="'+(p.brand||'')+'">' +
+                        '<img src="'+(p.image||'')+'" alt="'+p.name+'" onerror="this.style.display=\'none\'">' +
+                        '<div class="product-info"><div class="product-brand">'+(p.brand||'')+'</div>' +
+                        '<div class="product-name">'+p.name+'</div>' +
+                        '<div class="product-desc">'+(p.description||'').substring(0,80)+'</div>' +
+                        '<div class="product-price">₪'+price+' <span>ILS</span></div></div></div>';
                 });
                 grid.innerHTML = html;
             }).catch(function(e) { grid.innerHTML = '<p class="loading">خطأ في التحميل</p>'; });

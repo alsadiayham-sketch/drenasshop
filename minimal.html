@@ -55,6 +55,7 @@
             .products-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
             .product-card img { height: 200px; }
         }
+            .product-card.hidden { display: none; } .filters-section { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 30px 30px 0; max-width: 1300px; margin: 0 auto; } .filter-btn { padding: 8px 18px; border-radius: 0; border: 1px solid #eee; background: transparent; cursor: pointer; font-family: inherit; font-size: 0.8rem; font-weight: 400; transition: all 0.3s; color: #999; } .filter-btn.active { background: #222; color: #fff; border-color: #222; } .filter-btn:hover { border-color: #222; }
     </style>
 </head>
 <body>
@@ -73,7 +74,7 @@
         </div>
     </section>
 
-    <section class="products-section" id="products">
+        <div class="filters-section" id="filters"></div>`n`n    <section class="products-section" id="products">
         <div class="products-count" id="productsCount"></div>
         <div class="products-grid" id="productsGrid">
             <div class="loading">loading...</div>
@@ -90,23 +91,37 @@
     <script>
         (function() {
             var grid = document.getElementById('productsGrid');
-            var countEl = document.getElementById('productsCount');
+            var filtersEl = document.getElementById('filters');
+            var currentFilter = 'all';
             db.collection('products').orderBy('order').get().then(function(snap) {
-                if (snap.empty) { grid.innerHTML = '<p class="loading">no products</p>'; return; }
-                countEl.textContent = snap.size + ' products';
+                if (snap.empty) { grid.innerHTML = '<p class="loading">لا توجد منتجات</p>'; return; }
+                var categories = new Set(), brands = new Set(), products = [];
+                snap.forEach(function(doc) { var p = doc.data(); products.push(p); if (p.category) categories.add(p.category); if (p.brand) brands.add(p.brand); });
+                var fh = '<button class="filter-btn active" data-filter="all">الكل</button>';
+                categories.forEach(function(c) { fh += '<button class="filter-btn" data-filter="cat:'+c+'">'+c+'</button>'; });
+                brands.forEach(function(b) { fh += '<button class="filter-btn" data-filter="brand:'+b+'">'+b+'</button>'; });
+                filtersEl.innerHTML = fh;
+                filtersEl.addEventListener('click', function(e) {
+                    if (!e.target.classList.contains('filter-btn')) return;
+                    filtersEl.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
+                    e.target.classList.add('active'); currentFilter = e.target.getAttribute('data-filter');
+                    grid.querySelectorAll('.product-card').forEach(function(card) {
+                        var show = currentFilter==='all'||(currentFilter==='cat:'+card.dataset.category)||(currentFilter==='brand:'+card.dataset.brand);
+                        card.classList.toggle('hidden',!show);
+                    });
+                });
                 var html = '';
-                snap.forEach(function(doc) {
-                    var p = doc.data();
+                products.forEach(function(p) {
                     var price = p.sizes && p.sizes[0] ? p.sizes[0].price : p.price || 0;
-                    html += '<div class="product-card">' +
-                        '<img src="' + (p.image || '') + '" alt="' + p.name + '" onerror="this.src=\'data:image/svg+xml,%3Csvg xmlns=%2527http://www.w3.org/2000/svg%2527 width=%2527400%2527 height=%2527400%2527%3E%3Crect fill=%2527%2523f5f5f5%2527 width=%2527400%2527 height=%2527400%2527/%3E%3C/svg%3E\'">' +
-                        '<div class="product-brand">' + (p.brand || '') + '</div>' +
-                        '<div class="product-name">' + p.name + '</div>' +
-                        '<div class="product-price">₪' + price + '</div>' +
-                        '</div>';
+                    html += '<div class="product-card" data-category="'+(p.category||'')+'" data-brand="'+(p.brand||'')+'">' +
+                        '<img src="'+(p.image||'')+'" alt="'+p.name+'" onerror="this.style.display=\'none\'">' +
+                        '<div class="product-info"><div class="product-brand">'+(p.brand||'')+'</div>' +
+                        '<div class="product-name">'+p.name+'</div>' +
+                        '<div class="product-desc">'+(p.description||'').substring(0,70)+'</div>' +
+                        '<div class="product-price">₪'+price+'</div></div></div>';
                 });
                 grid.innerHTML = html;
-            }).catch(function(e) { grid.innerHTML = '<p class="loading">error</p>'; });
+            }).catch(function(e) { grid.innerHTML = '<p class="loading">خطأ في التحميل</p>'; });
         })();
     </script>
 </body>
