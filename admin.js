@@ -737,24 +737,78 @@ function renderHeroSlides() {
         var preview = slide.type === 'video'
             ? '<video src="' + slide.url + '" muted></video>'
             : '<img src="' + slide.url + '" alt="' + (slide.title || 'Hero') + '">';
-        return '<div class="hero-slide-card">' +
+        return '<div class="hero-slide-card" draggable="true" data-slide-id="' + slide.id + '" data-idx="' + idx + '">' +
+            '<div class="slide-handle"><span>⠿</span><span class="order-num">' + (idx + 1) + '</span></div>' +
             '<div class="slide-preview">' + preview + '</div>' +
             '<div class="slide-info">' +
                 '<span class="slide-type">' + (slide.type === 'video' ? '🎬 فيديو' : '🖼️ صورة') + '</span>' +
                 '<h4>' + (slide.title || '(بدون عنوان)') + '</h4>' +
                 '<p>' + (slide.subtitle || '(بدون وصف)') + '</p>' +
-                '<p style="font-size:0.75rem; color:#999;">ترتيب: ' + (slide.order || 1) + '</p>' +
             '</div>' +
             '<div class="slide-actions">' +
-                '<div class="slide-order">' +
-                    '<button onclick="moveHeroSlide(\'' + slide.id + '\', -1)" title="أعلى">↑</button>' +
-                    '<button onclick="moveHeroSlide(\'' + slide.id + '\', 1)" title="أسفل">↓</button>' +
-                '</div>' +
-                '<button class="btn-edit" onclick="editHeroSlide(\'' + slide.id + '\')">تعديل</button>' +
-                '<button class="btn-delete" onclick="deleteHeroSlide(\'' + slide.id + '\')">حذف</button>' +
+                '<button class="btn-edit" onclick="editHeroSlide(\'' + slide.id + '\')">✏️ تعديل</button>' +
+                '<button class="btn-delete" onclick="deleteHeroSlide(\'' + slide.id + '\')">🗑️ حذف</button>' +
             '</div>' +
         '</div>';
     }).join('');
+    initHeroDragDrop();
+}
+
+var heroDragSrcIdx = null;
+function initHeroDragDrop() {
+    var container = document.getElementById('heroSlidesList');
+    var cards = container.querySelectorAll('.hero-slide-card');
+    cards.forEach(function(card) {
+        card.addEventListener('dragstart', function(e) {
+            heroDragSrcIdx = parseInt(card.dataset.idx);
+            card.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', card.dataset.idx);
+        });
+        card.addEventListener('dragend', function() {
+            card.classList.remove('dragging');
+            container.querySelectorAll('.hero-slide-card').forEach(function(c) { c.classList.remove('drag-over'); });
+        });
+        card.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            container.querySelectorAll('.hero-slide-card').forEach(function(c) { c.classList.remove('drag-over'); });
+            card.classList.add('drag-over');
+        });
+        card.addEventListener('dragleave', function() {
+            card.classList.remove('drag-over');
+        });
+        card.addEventListener('drop', function(e) {
+            e.preventDefault();
+            card.classList.remove('drag-over');
+            var targetIdx = parseInt(card.dataset.idx);
+            if (heroDragSrcIdx === null || heroDragSrcIdx === targetIdx) return;
+            reorderHeroSlides(heroDragSrcIdx, targetIdx);
+            heroDragSrcIdx = null;
+        });
+    });
+}
+
+async function reorderHeroSlides(fromIdx, toIdx) {
+    // Reorder in array
+    var reordered = heroSlides.slice();
+    var moved = reordered.splice(fromIdx, 1)[0];
+    reordered.splice(toIdx, 0, moved);
+    // Update Firestore order for all affected slides
+    try {
+        setAdminLoading(true);
+        var batch = rawDb.batch();
+        reordered.forEach(function(slide, idx) {
+            var ref = db.collection('heroDisplay').doc(slide.id);
+            batch.update(ref, { order: idx + 1 });
+        });
+        await batch.commit();
+        setAdminStatus('تم إعادة ترتيب الشرائح.', 'success');
+    } catch (err) {
+        console.error(err);
+        setAdminStatus('خطأ في إعادة الترتيب.', 'error');
+    }
+    setAdminLoading(false);
 }
 
 function openHeroModal(slideId) {

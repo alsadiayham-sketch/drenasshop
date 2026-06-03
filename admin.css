@@ -214,18 +214,26 @@ html, body { font-family: 'Tajawal', sans-serif; background: #fafaf8; color: #1a
     cursor: pointer;
 }
 /* Hero Display Management */
-.hero-slides-list { display: grid; gap: 16px; }
-.hero-slide-card { display: grid; grid-template-columns: 180px 1fr auto; gap: 16px; align-items: center; background: white; border-radius: 14px; padding: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; }
-.hero-slide-card .slide-preview { width: 180px; height: 100px; border-radius: 10px; overflow: hidden; background: #f3f4f6; position: relative; }
+.hero-slides-list { display: grid; gap: 12px; }
+.hero-slide-card { display: grid; grid-template-columns: 50px 160px 1fr auto; gap: 16px; align-items: center; background: white; border-radius: 14px; padding: 14px 18px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border: 1px solid #e8ecf0; transition: all 0.25s ease; cursor: grab; }
+.hero-slide-card:active { cursor: grabbing; }
+.hero-slide-card.dragging { opacity: 0.5; transform: scale(0.97); border-color: #2C8C99; box-shadow: 0 8px 25px rgba(44,140,153,0.2); }
+.hero-slide-card.drag-over { border-color: #2C8C99; background: #f0fafb; transform: translateY(2px); }
+.hero-slide-card:hover { border-color: #d0e8ec; box-shadow: 0 4px 16px rgba(44,140,153,0.1); }
+.hero-slide-card .slide-handle { display: flex; flex-direction: column; align-items: center; gap: 2px; color: #b0b8c4; font-size: 1.1rem; user-select: none; }
+.hero-slide-card .slide-handle .order-num { font-size: 0.7rem; font-weight: 700; color: #2C8C99; background: #E8F4F8; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; margin-top: 4px; }
+.hero-slide-card .slide-preview { width: 160px; height: 90px; border-radius: 10px; overflow: hidden; background: #f3f4f6; position: relative; flex-shrink: 0; }
 .hero-slide-card .slide-preview img, .hero-slide-card .slide-preview video { width: 100%; height: 100%; object-fit: cover; }
-.hero-slide-card .slide-info { display: grid; gap: 4px; }
-.hero-slide-card .slide-info .slide-type { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; background: #E8F4F8; color: #2C8C99; width: fit-content; }
-.hero-slide-card .slide-info h4 { font-size: 1rem; color: #1a1a1a; }
-.hero-slide-card .slide-info p { font-size: 0.85rem; color: #6b7280; }
-.hero-slide-card .slide-actions { display: flex; gap: 8px; flex-direction: column; }
-.hero-slide-card .slide-order { display: flex; gap: 4px; }
-.hero-slide-card .slide-order button { width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e5e7eb; background: white; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-.hero-slide-card .slide-order button:hover { background: #E8F4F8; border-color: #2C8C99; }
+.hero-slide-card .slide-preview::after { content: ''; position: absolute; inset: 0; border-radius: 10px; border: 1px solid rgba(0,0,0,0.06); pointer-events: none; }
+.hero-slide-card .slide-info { display: grid; gap: 4px; min-width: 0; }
+.hero-slide-card .slide-info .slide-type { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; background: #E8F4F8; color: #2C8C99; width: fit-content; }
+.hero-slide-card .slide-info h4 { font-size: 0.95rem; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hero-slide-card .slide-info p { font-size: 0.82rem; color: #6b7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hero-slide-card .slide-actions { display: flex; gap: 6px; align-items: center; }
+.hero-slide-card .slide-actions button { padding: 7px 14px; border-radius: 8px; border: 1px solid #e5e7eb; background: white; cursor: pointer; font-size: 0.78rem; font-family: inherit; font-weight: 500; transition: all 0.2s; color: #4b5563; }
+.hero-slide-card .slide-actions button:hover { background: #E8F4F8; border-color: #2C8C99; color: #2C8C99; }
+.hero-slide-card .slide-actions .btn-delete { color: #dc2626; }
+.hero-slide-card .slide-actions .btn-delete:hover { background: #fef2f2; border-color: #dc2626; }
 .empty-hero-state { text-align: center; padding: 60px 20px; background: white; border-radius: 16px; border: 2px dashed #e5e7eb; }
 .empty-hero-state p { color: #6b7280; margin-bottom: 16px; }
-@media (max-width: 768px) { .hero-slide-card { grid-template-columns: 1fr; } .hero-slide-card .slide-preview { width: 100%; height: 140px; } }
+@media (max-width: 768px) { .hero-slide-card { grid-template-columns: 40px 1fr; } .hero-slide-card .slide-preview { display: none; } .hero-slide-card .slide-actions { flex-wrap: wrap; } }
