@@ -1,6 +1,6 @@
 ﻿var ADMIN_USER = 'enas';
 var ADMIN_PASS = '5555';
-var FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27400%27 height=%27400%27 viewBox=%270 0 400 400%27%3E%3Crect fill=%27%232C8C99%27 width=%27400%27 height=%27400%27/%3E%3Ctext fill=%27%23ffffff%27 font-family=%27Arial%27 font-size=%2740%27 x=%2750%2525%27 y=%2745%2525%27 text-anchor=%27middle%27%3E💆%3C/text%3E%3Ctext fill=%27%23ffffff%27 font-family=%27Arial%27 font-size=%2720%27 x=%2750%2525%27 y=%2760%2525%27 text-anchor=%27middle%27%3EEnas Shop%3C/text%3E%3C/svg%3E";
+var FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27400%27 height=%27400%27 viewBox=%270 0 400 400%27%3E%3Crect fill=%27%230066cc%27 width=%27400%27 height=%27400%27/%3E%3Ctext fill=%27%23ffffff%27 font-family=%27Arial%27 font-size=%2740%27 x=%2750%2525%27 y=%2745%2525%27 text-anchor=%27middle%27%3E💆%3C/text%3E%3Ctext fill=%27%23ffffff%27 font-family=%27Arial%27 font-size=%2720%27 x=%2750%2525%27 y=%2760%2525%27 text-anchor=%27middle%27%3EEnas Shop%3C/text%3E%3C/svg%3E";
 
 var products = [];
 var discounts = [];
@@ -10,6 +10,8 @@ var siteSettings = normalizeSettings(DEFAULT_SITE_SETTINGS);
 var unsubscribers = [];
 var charts = {};
 var isInitializing = false;
+var previousOrderCount = -1;
+var notificationSound = null;
 
 var adminReady = {
     products: false,
@@ -17,6 +19,46 @@ var adminReady = {
     orders: false,
     settings: false
 };
+
+function initNotificationSound() {
+    notificationSound = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbsGQcBj+a2teleVkWIIHO4bJxJAIui9Xqt3YWCFCX3/LDfzAAAHCh3PLMdyYBEV+Y3/jDeCYAJ3qk4vXIdCQAQ3yr7fvGdx4AMn608vnAdRkAH3e37fjLex4AJXm08PfLfSAAK4C4+P7NfBwAIHS37PvKfyQAHnCz6/nIfSYAHG+y6/jJfycAHXCz6/nJficA');
+}
+
+function playNotificationSound() {
+    try {
+        if (!notificationSound) initNotificationSound();
+        notificationSound.currentTime = 0;
+        notificationSound.play();
+    } catch(e) {}
+}
+
+function updateOrderBadge() {
+    var newOrders = orders.filter(function(o) { return o.status === 'new' || o.status === 'جديد'; });
+    var badge = document.getElementById('orderBadge');
+    if (!badge) return;
+    if (newOrders.length > 0) {
+        badge.textContent = newOrders.length;
+        badge.style.display = 'flex';
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+function checkNewOrderNotification(snapshot) {
+    if (previousOrderCount === -1) {
+        previousOrderCount = snapshot.docs.length;
+        return;
+    }
+    if (snapshot.docs.length > previousOrderCount) {
+        playNotificationSound();
+        if (Notification.permission === 'granted') {
+            new Notification('طلب جديد!', { body: 'لديك طلب جديد في المتجر', icon: 'logo.png' });
+        } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission();
+        }
+    }
+    previousOrderCount = snapshot.docs.length;
+}
 
 document.addEventListener('DOMContentLoaded', function () {
     if (sessionStorage.getItem('drenasshop_admin') === 'true') {
@@ -86,6 +128,11 @@ async function initializeAdmin() {
     setAdminLoading(true);
     setAdminStatus('جاري مزامنة فايرستور...', '');
 
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+    initNotificationSound();
+
     if (!window.db) {
         setAdminLoading(false);
         setAdminStatus('تعذر تهيئة فايربيس. تأكدي من الاتصال بالإنترنت.', 'error');
@@ -143,12 +190,14 @@ function subscribeToCollections() {
     }));
 
     unsubscribers.push(db.collection('orders').orderBy('date', 'desc').onSnapshot(function (snapshot) {
+        checkNewOrderNotification(snapshot);
         orders = snapshot.docs.map(function (docSnap) {
             var data = docSnap.data();
             data._docId = docSnap.id;
             return data;
         });
         adminReady.orders = true;
+        updateOrderBadge();
         renderOrdersTable();
         renderDashboard();
         checkAdminReady();
