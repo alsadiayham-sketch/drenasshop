@@ -662,8 +662,10 @@ body.has-banner .mobile-menu { top: 102px; }
 
 .delivery-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 20px;
+    max-width: 700px;
+    margin: 0 auto;
 }
 
 .delivery-card {
@@ -672,23 +674,22 @@ body.has-banner .mobile-menu { top: 102px; }
     background: var(--white);
     border-radius: var(--radius);
     transition: var(--transition);
-    border: 2px solid transparent;
+    border: 2px solid #e8edf2;
 }
 
 .delivery-card:hover {
-    border-color: var(--primary-light);
+    border-color: #0066cc;
     transform: translateY(-3px);
     box-shadow: var(--shadow);
 }
 
-.delivery-icon { font-size: 2.2rem; display: block; margin-bottom: 12px; }
-.delivery-card h3 { font-size: 1.2rem; margin-bottom: 5px; color: var(--primary-dark); }
+.delivery-card h3 { font-size: 1.2rem; margin-bottom: 5px; color: #0066cc; }
 .delivery-card p { color: var(--text-light); font-size: 0.95rem; }
 
 /* ===== Contact ===== */
 .contact-section {
     padding: 80px 0;
-    background: linear-gradient(135deg, #fdf8e8, #fafaf8);
+    background: linear-gradient(135deg, #f0f7ff, #f8fafb);
 }
 
 .social-links {
@@ -701,24 +702,26 @@ body.has-banner .mobile-menu { top: 102px; }
 .social-btn {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     padding: 14px 28px;
     border-radius: 8px;
     text-decoration: none;
-    color: var(--white);
+    color: white;
     font-weight: 700;
     font-size: 1rem;
     transition: var(--transition);
+    background: #0066cc;
 }
 
 .social-btn:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    box-shadow: 0 8px 25px rgba(0,102,204,0.3);
+    background: #004a99;
 }
 
-.social-btn.whatsapp { background: #25d366; }
-.social-btn.instagram { background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
-.social-btn.tiktok { background: #000; }
+.social-btn.whatsapp { background: #0066cc; }
+.social-btn.instagram { background: #0052a3; }
+.social-btn.tiktok { background: #1a73e8; }
 
 /* ===== Footer ===== */
 .footer {
