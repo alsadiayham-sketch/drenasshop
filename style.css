@@ -1322,6 +1322,8 @@ html[dir="rtl"] .pdp-image { border-radius: 0 12px 12px 0; }
     .cart-sidebar { width: 100vw; max-width: 100vw; }
     .logo { gap: 6px; }
     .logo-img { width: 30px; height: 30px; }
+    .logo-text { display: flex; flex-direction: column; line-height: 1.2; font-size: 1rem; }
+    .logo-line2 { font-size: 0.75rem; }
     .logo-img { height: 30px; width: 30px; }
     .navbar { padding: 8px 0; }
     .pdp-content { grid-template-columns: 1fr; }
