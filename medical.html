@@ -1,15 +1,42 @@
-﻿<!DOCTYPE html>
-<!-- Deployed via GitHub Actions -->
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enas Shop | إيناس شوب</title>
+    <title>Enas Shop | Medical Style</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="logo.png">
+    <style>
+        /* ===== Medical Hero (standalone, replaces slider hero) ===== */
+        .hero { min-height: 75vh; background: linear-gradient(180deg, rgba(232,244,253,0.9) 0%, rgba(248,250,251,0.92) 100%), url('https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1600&h=900&fit=crop') center/cover no-repeat; display: flex; align-items: center; padding: 100px 40px; }
+        .hero-slider, .hero-dots { display: none; }
+        .medical-hero { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 60px; width: 100%; }
+        .medical-hero-text { flex: 1; }
+        .medical-hero-text h1 { font-size: 2.8rem; color: #1a2a3a; margin-bottom: 20px; line-height: 1.4; }
+        .medical-hero-text h1 span { color: #0066cc; }
+        .medical-hero-text p { font-size: 1.15rem; color: #5a6a7a; line-height: 1.8; margin-bottom: 30px; }
+        .medical-hero-cta {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 14px 35px; background: #0066cc; color: #fff;
+            border-radius: 8px; font-size: 1rem; text-decoration: none; font-weight: 500;
+            transition: background 0.3s;
+        }
+        .medical-hero-cta:hover { background: #0052a3; }
+        .medical-hero-visual { flex: 1; text-align: center; }
+        .medical-hero-visual .medical-icon { font-size: 180px; opacity: 0.3; }
+
+        /* Hide sections not relevant to medical demo */
+        .about-section, .brands-section, .delivery-section, .contact-section, .order-tracking-section { display: none; }
+
+        @media (max-width: 768px) {
+            .medical-hero { flex-direction: column; text-align: center; }
+            .medical-hero-text h1 { font-size: 2rem; }
+            .medical-hero-visual { display: none; }
+        }
+    </style>
 </head>
 <body>
     <div class="discount-banner" id="discountBanner" style="display:none;">
@@ -18,7 +45,6 @@
         </div>
     </div>
 
-    <!-- Combo Offer Banner (above header) -->
     <div class="combo-banner" id="comboBanner" style="display:none;" onclick="document.getElementById('comboOffersSection').scrollIntoView({behavior:'smooth'})">
         <div class="combo-banner-content">
             <span class="combo-banner-icon">🔥</span>
@@ -30,8 +56,8 @@
     <nav class="navbar" id="navbar">
         <div class="container nav-container">
             <a href="#" class="logo">
-                <img src="logo.png" alt="Dr. Enas Shop" class="logo-img" id="logoImg">
-                <span id="logoText" class="logo-text">Dr. <span style="color:#1a2a3a">Enas</span> Shop</span>
+                <img src="logo.png" alt="Enas Shop" class="logo-img" id="logoImg">
+                <span id="logoText" class="logo-text">Dr. <span class="logo-highlight">Enas</span> Shop</span>
             </a>
             <div class="nav-search">
                 <input type="text" id="navSearchInput" placeholder="ابحثي عن منتج..." autocomplete="off">
@@ -39,10 +65,6 @@
             </div>
             <ul class="nav-links">
                 <li><a href="#products">المنتجات</a></li>
-                <li><a href="#about">من نحن</a></li>
-                <li><a href="#delivery">التوصيل</a></li>
-                <li><a href="#contact">تواصلي معنا</a></li>
-                <li><a href="#order-tracking">تتبّع الطلب</a></li>
             </ul>
             <div class="cart-icon" id="cartIcon" onclick="toggleCart()">
                 🛒
@@ -54,29 +76,21 @@
 
     <div class="mobile-menu" id="mobileMenu">
         <a href="#products" onclick="toggleMobileMenu()">المنتجات</a>
-        <a href="#about" onclick="toggleMobileMenu()">من نحن</a>
-        <a href="#delivery" onclick="toggleMobileMenu()">التوصيل</a>
-        <a href="#contact" onclick="toggleMobileMenu()">تواصلي معنا</a>
-        <a href="#order-tracking" onclick="toggleMobileMenu()">تتبّع الطلب</a>
     </div>
 
     <section class="hero" id="heroSection">
-        <div class="hero-slider" id="heroSlider">
-            <!-- Default slide (shown until Firestore loads) -->
-            <div class="hero-slide active">
-                <div class="hero-overlay"></div>
-                <div class="hero-content">
-                    <div class="hero-logo">
-                        <img src="logo.png" id="heroLogo" alt="Enas Shop" class="hero-logo-img">
-                    </div>
-                    <h1 id="heroTitle" style="display:none;">Enas Shop | إيناس شوب</h1>
-                    <p class="hero-subtitle" id="heroSubtitle">منتجات عناية بالبشرة والجسم والشعر بأعلى جودة</p>
-                    <p class="hero-tagline">ماركات عالمية أصلية مع توصيل إلى الضفة والقدس والداخل</p>
-                    <a href="#products" class="btn-primary">تسوقي الآن</a>
-                </div>
+        <div class="hero-slider" id="heroSlider"></div>
+        <div class="hero-dots" id="heroDots"></div>
+        <div class="medical-hero">
+            <div class="medical-hero-text">
+                <h1>حلول <span>طبية</span> متقدمة للعناية بالبشرة</h1>
+                <p>منتجات مدعومة علمياً ومختارة بعناية من قبل متخصصين. تركيبات فعّالة لنتائج مثبتة سريرياً.</p>
+                <a href="#products" class="medical-hero-cta">🩺 استكشف المنتجات</a>
+            </div>
+            <div class="medical-hero-visual">
+                <div class="medical-icon">⚕️</div>
             </div>
         </div>
-        <div class="hero-dots" id="heroDots"></div>
     </section>
 
     <div class="trust-bar">
@@ -86,7 +100,6 @@
         <div class="trust-item"><div class="icon">📋</div><span>توصيل سريع وآمن</span></div>
     </div>
 
-    <!-- Combo Offers Section (before products) -->
     <section class="combo-offers-section" id="comboOffersSection" style="display:none;">
         <div class="container">
             <h2 class="section-title combo-section-title">🔥 عروض محدودة</h2>
@@ -127,67 +140,11 @@
         </div>
     </section>
 
-    <section id="about" class="about-section">
-        <div class="container">
-            <h2 class="section-title">💫 من نحن</h2>
-            <div class="about-content">
-                <div class="about-text">
-                    <p id="aboutText">إيناس شوب - مصنع شوكولاتة فلسطيني متخصص بصناعة أجود أنواع الشوكولاتة يدوياً.<br>نقدم تغليف مخصص وتشكيلات فريدة لكل المناسبات.<br>اختاري الألوان والحشوات والأنواع اللي بتحبيها وخلينا نجهزلك أحلى علبة.</p>
-                </div>
-                <div class="about-features">
-                    <div class="feature"><span class="feature-icon">✅</span><span>جودة عالية مضمونة</span></div>
-                    <div class="feature"><span class="feature-icon">🚚</span><span>توصيل سريع</span></div>
-                    <div class="feature"><span class="feature-icon">💰</span><span>أسعار منافسة</span></div>
-                    <div class="feature"><span class="feature-icon">📦</span><span>تغليف مميز</span></div>
-                    <div class="feature"><span class="feature-icon">💜</span><span>خدمة عملاء مميزة</span></div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="brands-section">
-        <div class="container">
-            <h2 class="section-title">ماركاتنا</h2>
-            <div class="brands-grid" id="brandsGrid"></div>
-        </div>
-    </section>
-
-    <section id="delivery" class="delivery-section">
-        <div class="container">
-            <h2 class="section-title">🚚 مناطق التوصيل</h2>
-            <div class="delivery-grid">
-                <div class="delivery-card"><span class="delivery-icon">🚗</span><h3>الضفة</h3><p>₪20 لجميع المدن والبلدات</p></div>
-                <div class="delivery-card"><span class="delivery-icon">🏙️</span><h3>القدس</h3><p>₪30 مع خدمة توصيل سريعة</p></div>
-                <div class="delivery-card"><span class="delivery-icon">📦</span><h3>الداخل</h3><p>₪50 تغليف وتوصيل آمن</p></div>
-            </div>
-        </div>
-    </section>
-
-    <section id="contact" class="contact-section">
-        <div class="container">
-            <h2 class="section-title">📱 تواصلي معنا</h2>
-            <p class="section-subtitle">للطلب أو الاستفسار 💬</p>
-            <div class="social-links">
-                <a href="https://wa.me/970595170026" class="social-btn whatsapp" target="_blank" id="whatsappLink"><span>📱 WhatsApp</span></a>
-                <a href="https://www.instagram.com/dr_enas_shop/" class="social-btn instagram" target="_blank" id="instagramLink"><span>📸 Instagram</span></a>
-            </div>
-        </div>
-    </section>
-
-
-    <section id="order-tracking" class="order-tracking-section">
-        <div class="container">
-            <h2 class="section-title">🔎 تتبّع الطلب</h2>
-            <p class="section-subtitle">أدخلي رقم الطلب لعرض حالته الحالية وتفاصيله</p>
-            <div class="order-tracking-card">
-                <div class="order-tracking-form">
-                    <input type="text" id="orderTrackingInput" placeholder="مثال: ORD-123456" autocomplete="off">
-                    <button type="button" class="btn-primary" id="orderTrackingBtn" onclick="trackOrder()">بحث</button>
-                </div>
-                <div id="orderTrackingResult" class="order-tracking-result"></div>
-            </div>
-        </div>
-    </section>
+    <section id="about" class="about-section"></section>
+    <section class="brands-section"></section>
+    <section id="delivery" class="delivery-section"></section>
+    <section id="contact" class="contact-section"></section>
+    <section id="order-tracking" class="order-tracking-section"></section>
 
     <div class="modal-overlay pdp-overlay" id="pdpModal" style="display:none;" onclick="closePDP(event)">
         <div class="pdp-modal" onclick="event.stopPropagation()">
@@ -221,7 +178,6 @@
         </div>
     </div>
 
-    <!-- Combo Offer Modal -->
     <div class="modal-overlay combo-overlay" id="comboModal" style="display:none;" onclick="closeComboModal()">
         <div class="combo-modal" onclick="event.stopPropagation()">
             <button class="pdp-close" onclick="closeComboModal()">✕</button>
@@ -241,12 +197,10 @@
         </div>
     </div>
 
-    <!-- Packages Floating Banner -->
     <div class="packages-banner" id="packagesBanner" style="display:none;" onclick="openPackagesPopup()">
-        <span>اختاري باكيج بسعر خاص</span>
+        <span>📦</span> اختاري باكيج بسعر خاص
     </div>
 
-    <!-- Packages Modal -->
     <div class="modal-overlay combo-overlay" id="packagesModal" style="display:none;" onclick="closePackagesPopup()">
         <div class="combo-modal packages-modal-content" onclick="event.stopPropagation()">
             <button class="pdp-close" onclick="closePackagesPopup()">✕</button>
@@ -279,7 +233,7 @@
 
     <footer class="footer">
         <div class="container">
-            <p>© 2026 إيناس شوب. جميع الحقوق محفوظة</p>
+            <p>© 2026 Dr. Enas Shop | <a href="https://www.instagram.com/dr_enas_shop/">@dr_enas_shop</a></p>
         </div>
     </footer>
 
@@ -290,4 +244,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-<!-- deploy trigger -->

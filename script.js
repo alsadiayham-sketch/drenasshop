@@ -292,38 +292,25 @@ function renderProducts(productsToShow) {
     }
 
     productsToShow.forEach(function (product) {
-        var sizeData = getSizeData(product, 0);
         var pricing = getFinalPrice(product, 0, discounts);
-        var statusBadge = getStatusBadge(product.status);
-        var discountBadge = pricing.hasDiscount ? '<span class="discount-badge">-' + pricing.discountPercent + '%</span>' : '';
-        var soldOutClass = product.status === 'soldout' ? 'sold-out' : '';
-        var sizeSelector = product.sizes.length > 1
-            ? '<div class="card-size-selector"><label for="sizeSelect-' + product.id + '">الحجم:</label><select id="sizeSelect-' + product.id + '" class="size-select" onclick="event.stopPropagation()" onchange="updateProductSize(\'' + product.id + '\', this.value)">' + product.sizes.map(function (size, idx) { return '<option value="' + idx + '">' + getSizeLabel(size) + '</option>'; }).join('') + '</select></div>'
-            : '<div class="card-size-single"><span>الحجم:</span><strong>' + getSizeLabel(sizeData) + '</strong></div>';
+        var desc = (product.description || '').substring(0, 70);
 
         var card = document.createElement('div');
-        card.className = 'product-card ' + soldOutClass;
+        card.className = 'product-card';
         card.dataset.productId = String(product.id);
         card.dataset.brand = product.brand || '';
         card.dataset.category = product.category || '';
-        card.innerHTML = [
-            discountBadge,
-            statusBadge,
-            '<div class="product-image" onclick="openPDP(\'' + product.id + '\')" style="cursor:pointer;">',
-            '<img src="' + product.image + '" alt="' + product.name + '" loading="lazy" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">',
-            '</div>',
-            '<div class="product-info" onclick="openPDP(\'' + product.id + '\')" style="cursor:pointer;">',
-            '<span class="product-brand">' + product.brand + '</span>',
-            '<h3>' + product.name + '</h3>',
-            '<div class="product-meta"><span>' + product.category + '</span><span class="product-size" id="productSize-' + product.id + '">' + getSizeLabel(sizeData) + '</span></div>',
-            '<div class="product-price" id="productPrice-' + product.id + '">' + getPriceHTML(pricing) + '</div>',
-            '</div>',
-            '<div class="product-card-controls">' + sizeSelector + '</div>',
-            '<div class="product-card-actions">',
-            '<div class="qty-selector qty-sm" id="qty-' + product.id + '"><button onclick="event.stopPropagation(); changeCardQty(\'' + product.id + '\', -1)">−</button><span id="cardQty-' + product.id + '">1</span><button onclick="event.stopPropagation(); changeCardQty(\'' + product.id + '\', 1)">+</button></div>',
-            '<button class="btn-add-cart" onclick="addToCart(event, \'' + product.id + '\')" ' + (product.status === 'soldout' ? 'disabled' : '') + '>' + (product.status === 'soldout' ? 'نفذت الكمية' : 'أضيفي') + '</button>',
-            '</div>'
-        ].join('');
+        card.onclick = function() { openPDP(product.id); };
+        card.style.cursor = 'pointer';
+        card.innerHTML = '<img src="' + (product.image || '') + '" alt="' + product.name + '" loading="lazy" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">' +
+            '<div class="product-info">' +
+            '<div class="product-brand">' + (product.brand || '') + '</div>' +
+            '<div class="product-name">' + product.name + '</div>' +
+            (desc ? '<div class="product-desc">' + desc + '</div>' : '') +
+            '<div class="product-footer">' +
+            '<div class="product-price">' + getPriceHTML(pricing) + '</div>' +
+            '</div>' +
+            '</div>';
         grid.appendChild(card);
     });
 }
@@ -1195,7 +1182,7 @@ function renderComboBanner() {
     if (!banner) return;
 
     // Collect combo offer texts
-    var texts = comboOffers.map(function(o) { return '🔥 ' + (o.title || 'عرض خاص!'); });
+    var texts = comboOffers.map(function(o) { return o.title || 'عرض خاص!'; });
 
     // Collect active discount texts
     var now = new Date().toISOString().slice(0, 10);
@@ -1213,6 +1200,9 @@ function renderComboBanner() {
     document.getElementById('comboBannerText').textContent = texts.join('   •   ');
     banner.style.display = 'block';
     document.body.classList.add('has-combo-banner');
+    // Hide the separate discount banner since combo banner already includes discounts
+    var discBanner = document.getElementById('discountBanner');
+    if (discBanner) { discBanner.style.display = 'none'; document.body.classList.remove('has-banner'); }
 }
 
 function renderComboOffersSection() {
@@ -1229,7 +1219,7 @@ function renderComboOffersSection() {
         }).join('');
         var moreCount = (offer.eligibleProducts || []).length - 6;
         return '<div class="combo-offer-card">' +
-            '<div class="combo-offer-badge">🔥 عرض محدود</div>' +
+            '<div class="combo-offer-badge">عرض محدود</div>' +
             '<h3>' + (offer.title || 'عرض خاص') + '</h3>' +
             '<div class="combo-offer-price"><span class="combo-price-tag">₪' + (offer.comboPrice || 0) + '</span> <span class="combo-pick-info">لـ ' + (offer.pickCount || 4) + ' منتجات</span></div>' +
             '<div class="combo-offer-preview">' + eligiblePreview + (moreCount > 0 ? '<span class="combo-more">+' + moreCount + '</span>' : '') + '</div>' +
