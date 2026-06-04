@@ -102,21 +102,15 @@
                 <input type="text" id="productsSearchInput" placeholder="ابحثي عن منتج، ماركة، أو فئة..." autocomplete="off">
                 <div class="search-dropdown" id="productsSearchDropdown"></div>
             </div>
-            <div class="filter-toggle-bar">
-                <button class="filter-btn active" data-filter="all" onclick="filterProducts('all')">الكل</button>
+            <div class="filter-bar">
+                <select id="brandFilter" onchange="applyFilters()">
+                    <option value="all">كل الماركات</option>
+                </select>
+                <select id="categoryFilter" onchange="applyFilters()">
+                    <option value="all">كل الأنواع</option>
+                </select>
                 <button class="filter-btn status-btn" data-filter="special" onclick="filterProducts('special')">مميز</button>
                 <button class="filter-btn status-btn" data-filter="bestseller" onclick="filterProducts('bestseller')">الأكثر مبيعاً</button>
-                <button class="filter-toggle-btn" onclick="toggleFilters()">فلتر ▼</button>
-            </div>
-            <div class="filter-panel" id="filterPanel" style="display:none;">
-                <div class="filter-group">
-                    <h4>الماركة</h4>
-                    <div id="brandFilters"></div>
-                </div>
-                <div class="filter-group">
-                    <h4>النوع</h4>
-                    <div id="categoryFilters"></div>
-                </div>
             </div>
         </div>
     </section>

@@ -304,6 +304,8 @@ function renderProducts(productsToShow) {
         var card = document.createElement('div');
         card.className = 'product-card ' + soldOutClass;
         card.dataset.productId = String(product.id);
+        card.dataset.brand = product.brand || '';
+        card.dataset.category = product.category || '';
         card.innerHTML = [
             discountBadge,
             statusBadge,
@@ -348,6 +350,11 @@ function getStatusBadge(status) {
 
 function filterProducts(filter) {
     currentFilter = filter;
+    // Reset dropdowns when status filter is used
+    var brandSelect = document.getElementById('brandFilter');
+    var catSelect = document.getElementById('categoryFilter');
+    if (brandSelect) brandSelect.value = 'all';
+    if (catSelect) catSelect.value = 'all';
     document.querySelectorAll('.filter-btn').forEach(function (button) {
         button.classList.remove('active');
     });
@@ -377,15 +384,27 @@ function createFilterButton(value) {
 }
 
 function renderFilters() {
-    var categories = Array.from(new Set(products.map(function (product) { return product.category; })));
-    var brands = Array.from(new Set(products.map(function (product) { return product.brand; })));
-    var catContainer = document.getElementById('categoryFilters');
-    var brandContainer = document.getElementById('brandFilters');
-    if (!catContainer || !brandContainer) return;
-    catContainer.innerHTML = '';
-    brandContainer.innerHTML = '';
-    categories.forEach(function (category) { catContainer.appendChild(createFilterButton(category)); });
-    brands.forEach(function (brand) { brandContainer.appendChild(createFilterButton(brand)); });
+    var categories = Array.from(new Set(products.map(function (product) { return product.category; }).filter(Boolean)));
+    var brands = Array.from(new Set(products.map(function (product) { return product.brand; }).filter(Boolean)));
+    var brandSelect = document.getElementById('brandFilter');
+    var catSelect = document.getElementById('categoryFilter');
+    if (!brandSelect || !catSelect) return;
+    brandSelect.innerHTML = '<option value="all">كل الماركات</option>' + brands.map(function(b) { return '<option value="' + b + '">' + b + '</option>'; }).join('');
+    catSelect.innerHTML = '<option value="all">كل الأنواع</option>' + categories.map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
+}
+
+function applyFilters() {
+    var brand = document.getElementById('brandFilter').value;
+    var category = document.getElementById('categoryFilter').value;
+    // Remove active from status buttons
+    document.querySelectorAll('.filter-btn.status-btn').forEach(function(btn) { btn.classList.remove('active'); });
+    var filtered = products.filter(function(p) {
+        var showBrand = brand === 'all' || p.brand === brand;
+        var showCat = category === 'all' || p.category === category;
+        return showBrand && showCat;
+    });
+    currentFilter = 'all';
+    renderProducts(filtered);
 }
 
 function renderBrands() {
@@ -1266,14 +1285,15 @@ function renderComboProducts() {
         if (!product) return '';
         var selectedCount = comboSelectedIds.filter(function(id) { return id === pid; }).length;
         var isSelected = selectedCount > 0;
-        var isDisabled = !isSelected && comboSelectedIds.length >= pickCount;
+        var isDisabled = comboSelectedIds.length >= pickCount && !isSelected;
         if (allowDuplicates) isDisabled = comboSelectedIds.length >= pickCount;
-        var disabledClass = isDisabled && !isSelected ? ' disabled' : '';
+        var disabledClass = isDisabled ? ' disabled' : '';
         var selectedClass = isSelected ? ' selected' : '';
         var price = product.sizes && product.sizes[0] ? product.sizes[0].price : 0;
         var badge = allowDuplicates && selectedCount > 0 ? '<div class="combo-card-count">' + selectedCount + '</div>' : '';
+        var removeBtn = allowDuplicates && selectedCount > 0 ? '<button class="combo-card-remove" onclick="event.stopPropagation();removeComboProduct(\'' + pid + '\')">−</button>' : '';
         return '<div class="combo-product-card' + selectedClass + disabledClass + '" onclick="toggleComboProduct(\'' + pid + '\')">' +
-            '<div class="combo-card-check">✓</div>' + badge +
+            '<div class="combo-card-check">✓</div>' + badge + removeBtn +
             '<img src="' + product.image + '" alt="' + product.name + '" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">' +
             '<div class="combo-card-info"><h4>' + product.name + '</h4>' +
             '<span class="original-price">₪' + price + '</span></div></div>';
@@ -1294,14 +1314,17 @@ function toggleComboProduct(pid) {
             comboSelectedIds.push(pid);
         }
     } else {
-        // Duplicates allowed: always add, click selected to remove last occurrence
-        if (idx !== -1 && comboSelectedIds.lastIndexOf(pid) === comboSelectedIds.length - 1 && comboSelectedIds[comboSelectedIds.length - 1] === pid) {
-            // Remove last occurrence if user clicks same product that was just added
-            comboSelectedIds.splice(comboSelectedIds.lastIndexOf(pid), 1);
-        } else if (comboSelectedIds.length < pickCount) {
-            comboSelectedIds.push(pid);
-        }
+        // Duplicates allowed: clicking always adds
+        if (comboSelectedIds.length >= pickCount) return;
+        comboSelectedIds.push(pid);
     }
+    renderComboProducts();
+    updateComboProgress();
+}
+
+function removeComboProduct(pid) {
+    var idx = comboSelectedIds.lastIndexOf(pid);
+    if (idx !== -1) comboSelectedIds.splice(idx, 1);
     renderComboProducts();
     updateComboProgress();
 }
