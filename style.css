@@ -2129,8 +2129,11 @@ body.has-combo-banner .mobile-menu { top: calc(62px + 36px); }
 }
 
 @media (max-width: 768px) {
-    .combo-banner { width: 90vw; padding: 10px 16px; bottom: 10px; }
-    .combo-banner-content { flex-wrap: wrap; justify-content: center; gap: 8px; }
+    .combo-banner { padding: 6px 12px; font-size: 0.75rem; }
+    .combo-banner-text { font-size: 0.75rem; }
+    body.has-combo-banner .navbar { top: 30px; }
+    body.has-combo-banner .hero { margin-top: 30px; }
+    body.has-combo-banner .mobile-menu { top: calc(62px + 30px); }
     .combo-products-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 16px; }
     .combo-product-card img { height: 100px; }
 }
