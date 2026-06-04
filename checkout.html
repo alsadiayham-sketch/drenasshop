@@ -409,7 +409,32 @@
                             lineTotal: null
                         };
                     }
-                    var product = products.find(function (entry) { return entry.id === item.id; });
+                    if (item.comboOfferId) {
+                        var comboProduct = products.find(function(p) { return String(p.id) === String(item.productId); });
+                        return {
+                            type: 'combo',
+                            productId: item.productId,
+                            name: comboProduct ? comboProduct.name : 'منتج عرض',
+                            comboOfferId: item.comboOfferId,
+                            comboTitle: item.comboTitle,
+                            qty: item.qty,
+                            price: item.price,
+                            lineTotal: item.price * item.qty
+                        };
+                    }
+                    if (item.type === 'package') {
+                        return {
+                            type: 'package',
+                            packageId: item.id,
+                            name: item.packageName || 'باقة',
+                            packageProducts: item.packageProducts,
+                            qty: item.qty,
+                            price: item.price,
+                            lineTotal: item.price * item.qty
+                        };
+                    }
+                    var product = products.find(function (entry) { return String(entry.id) === String(item.id); });
+                    if (!product) return { productId: item.id, name: 'منتج', qty: item.qty, price: item.price, lineTotal: item.price * item.qty };
                     var sizeData = getSizeData(product, item.sizeIdx);
                     var pricing = getFinalPrice(product, item.sizeIdx, discounts);
                     return {

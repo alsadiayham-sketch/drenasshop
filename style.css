@@ -2053,6 +2053,21 @@ body.has-combo-banner .mobile-menu { top: calc(62px + 36px); }
     font-weight: bold;
 }
 .combo-product-card.selected .combo-card-check { display: flex; }
+.combo-card-count {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #e63946;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
 .combo-modal-footer {
     padding: 16px 24px;
     border-top: 1px solid #e8edf2;
