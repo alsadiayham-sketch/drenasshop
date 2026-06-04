@@ -386,18 +386,16 @@ function createFilterButton(value) {
 function renderFilters() {
     var categories = Array.from(new Set(products.map(function (product) { return product.category; }).filter(Boolean)));
     var brands = Array.from(new Set(products.map(function (product) { return product.brand; }).filter(Boolean)));
-    var brandSelect = document.getElementById('brandFilter');
     var catSelect = document.getElementById('categoryFilter');
+    var brandSelect = document.getElementById('brandFilter');
     if (!brandSelect || !catSelect) return;
-    brandSelect.innerHTML = '<option value="all">كل الماركات</option>' + brands.map(function(b) { return '<option value="' + b + '">' + b + '</option>'; }).join('');
-    catSelect.innerHTML = '<option value="all">كل الأنواع</option>' + categories.map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
+    catSelect.innerHTML = '<option value="all">كل الفئات</option>' + categories.map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
+    brandSelect.innerHTML = '<option value="all">كل البراندات</option>' + brands.map(function(b) { return '<option value="' + b + '">' + b + '</option>'; }).join('');
 }
 
 function applyFilters() {
     var brand = document.getElementById('brandFilter').value;
     var category = document.getElementById('categoryFilter').value;
-    // Remove active from status buttons
-    document.querySelectorAll('.filter-btn.status-btn').forEach(function(btn) { btn.classList.remove('active'); });
     var filtered = products.filter(function(p) {
         var showBrand = brand === 'all' || p.brand === brand;
         var showCat = category === 'all' || p.category === category;
