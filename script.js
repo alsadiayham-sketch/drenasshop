@@ -1,4 +1,4 @@
-﻿var FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27400%27 height=%27400%27 viewBox=%270 0 400 400%27%3E%3Crect fill=%27%232C8C99%27 width=%27400%27 height=%27400%27/%3E%3Ctext fill=%27%23ffffff%27 font-family=%27Arial%27 font-size=%2740%27 x=%2750%2525%27 y=%2745%2525%27 text-anchor=%27middle%27%3E💆%3C/text%3E%3Ctext fill=%27%23ffffff%27 font-family=%27Arial%27 font-size=%2720%27 x=%2750%2525%27 y=%2760%2525%27 text-anchor=%27middle%27%3EEnas Shop%3C/text%3E%3C/svg%3E";
+var FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27400%27 height=%27400%27 viewBox=%270 0 400 400%27%3E%3Crect fill=%27%232C8C99%27 width=%27400%27 height=%27400%27/%3E%3Ctext fill=%27%23ffffff%27 font-family=%27Arial%27 font-size=%2740%27 x=%2750%2525%27 y=%2745%2525%27 text-anchor=%27middle%27%3E💆%3C/text%3E%3Ctext fill=%27%23ffffff%27 font-family=%27Arial%27 font-size=%2720%27 x=%2750%2525%27 y=%2760%2525%27 text-anchor=%27middle%27%3EEnas Shop%3C/text%3E%3C/svg%3E";
 
 var products = [];
 var discounts = [];
@@ -1130,7 +1130,7 @@ function renderHeroSlider(slides) {
             '<div class="hero-content">' +
             (slide.title ? '<h1 style="font-size:2.8rem; font-weight:800; color:white; text-shadow:2px 2px 20px rgba(0,0,0,0.3); margin-bottom:12px;">' + slide.title + '</h1>' : '') +
             (slide.subtitle ? '<p style="font-size:1.3rem; color:rgba(255,255,255,0.9); margin-bottom:24px;">' + slide.subtitle + '</p>' : '') +
-            '<a href="#products" class="btn-primary" style="background:#0066cc;color:#fff;border-radius:8px;padding:14px 35px;">تسوقي الآن</a>' +
+            '<a href="#products" class="btn-primary" style="background:#B7E1EF;color:#fff;border-radius:8px;padding:14px 35px;">تسوقي الآن</a>' +
             '</div>';
         return '<div class="hero-slide' + (idx === 0 ? ' active' : '') + '">' + mediaHTML + captionHTML + '</div>';
     }).join('');
