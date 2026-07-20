@@ -6,15 +6,15 @@ html, body { font-family: 'Tajawal', sans-serif; background: #f8fafb; color: #1a
 .login-card > p { color: #6b7280; margin-bottom: 25px; }
 .login-card input { width: 100%; padding: 12px 16px; margin-bottom: 12px; border: 2px solid #e5e7eb; border-radius: 10px; font-family: 'Tajawal', sans-serif; font-size: 0.95rem; }
 .login-card input:focus { border-color: #1B7A97; outline: none; }
-.login-card button { width: 100%; padding: 12px; background: #1B7A97; color: white; border: none; border-radius: 10px; font-family: 'Tajawal', sans-serif; font-weight: 700; font-size: 1rem; cursor: pointer; transition: background 0.3s; }
-.login-card button:hover { background: #145E74; }
+.login-card button { width: 100%; padding: 12px; background: #B7E1EF; color: #0E3A47; border: none; border-radius: 10px; font-family: 'Tajawal', sans-serif; font-weight: 700; font-size: 1rem; cursor: pointer; transition: background 0.3s; }
+.login-card button:hover { background: #8FCFE3; }
 .error { color: #ef4444; font-size: 0.85rem; margin-top: 10px; }
 .admin-nav { background: white; padding: 15px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
 .admin-nav-content { max-width: 1280px; margin: 0 auto; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
 .admin-nav h2 { font-size: 1.2rem; color: #1B7A97; }
 .admin-tabs { display: flex; gap: 8px; flex: 1; flex-wrap: wrap; }
 .tab-btn { padding: 8px 18px; border: 2px solid #b3d4f7; background: white; color: #1B7A97; border-radius: 20px; font-family: 'Tajawal', sans-serif; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.3s; position: relative; }
-.tab-btn:hover, .tab-btn.active { background: #1B7A97; color: white; border-color: #1B7A97; }
+.tab-btn:hover, .tab-btn.active { background: #B7E1EF; color: #0E3A47; border-color: #1B7A97; }
 .order-badge { position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; font-size: 0.65rem; font-weight: 700; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 4px; animation: badgePulse 2s infinite; }
 @keyframes badgePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 .logout-btn { padding: 8px 18px; background: #fef2f2; color: #ef4444; border: 1px solid #ef4444; border-radius: 20px; font-family: 'Tajawal', sans-serif; font-weight: 600; cursor: pointer; }
@@ -34,7 +34,7 @@ html, body { font-family: 'Tajawal', sans-serif; background: #f8fafb; color: #1a
 .nested-header { margin-top: 28px; }
 .header-actions, .orders-filters { display: flex; gap: 10px; flex-wrap: wrap; }
 .orders-filters input, .orders-filters select { min-width: 180px; padding: 10px 12px; border: 2px solid #e5e7eb; border-radius: 10px; font-family: 'Tajawal', sans-serif; }
-.btn-add, .btn-add-size, .btn-secondary { padding: 10px 20px; background: #1B7A97; color: white; border: none; border-radius: 10px; font-family: 'Tajawal', sans-serif; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+.btn-add, .btn-add-size, .btn-secondary { padding: 10px 20px; background: #B7E1EF; color: #0E3A47; border: none; border-radius: 10px; font-family: 'Tajawal', sans-serif; font-weight: 700; cursor: pointer; transition: all 0.3s; }
 .btn-secondary { background: #1a1a1a; }
 .btn-add:hover, .btn-add-size:hover, .btn-secondary:hover { transform: translateY(-2px); opacity: 0.95; }
 .products-table-container { overflow-x: auto; }
@@ -45,7 +45,7 @@ html, body { font-family: 'Tajawal', sans-serif; background: #f8fafb; color: #1a
 .admin-table .actions { white-space: nowrap; }
 .admin-table .actions button { padding: 5px 10px; margin: 0 3px; border: none; border-radius: 6px; font-family: 'Tajawal', sans-serif; font-size: 0.8rem; cursor: pointer; transition: all 0.3s; }
 .btn-edit { background: #e8f2ff; color: #1B7A97; }
-.btn-edit:hover { background: #1B7A97; color: white; }
+.btn-edit:hover { background: #B7E1EF; color: #0E3A47; }
 .btn-delete { background: #fef2f2; color: #ef4444; }
 .btn-delete:hover { background: #ef4444; color: white; }
 .status-tag { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
@@ -70,8 +70,8 @@ html, body { font-family: 'Tajawal', sans-serif; background: #f8fafb; color: #1a
 .size-row { display: grid; grid-template-columns: 1fr 120px 1fr auto; gap: 8px; align-items: center; }
 .btn-remove-size { padding: 10px 12px; background: #fef2f2; color: #ef4444; border: none; border-radius: 8px; font-family: 'Tajawal', sans-serif; font-weight: 600; cursor: pointer; }
 .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
-.btn-save { padding: 12px 25px; background: #1B7A97; color: white; border: none; border-radius: 10px; font-family: 'Tajawal', sans-serif; font-weight: 700; cursor: pointer; }
-.btn-save:hover { background: #145E74; }
+.btn-save { padding: 12px 25px; background: #B7E1EF; color: #0E3A47; border: none; border-radius: 10px; font-family: 'Tajawal', sans-serif; font-weight: 700; cursor: pointer; }
+.btn-save:hover { background: #8FCFE3; }
 .btn-cancel { padding: 12px 25px; background: #f3f4f6; color: #6b7280; border: none; border-radius: 10px; font-family: 'Tajawal', sans-serif; font-weight: 600; cursor: pointer; }
 .settings-form { max-width: 700px; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
 .settings-form textarea { resize: vertical; }
@@ -179,8 +179,8 @@ html, body { font-family: 'Tajawal', sans-serif; background: #f8fafb; color: #1a
 .btn-bulk-status,
 .btn-bulk-discount {
     padding: 6px 14px;
-    background: #1B7A97;
-    color: white;
+    background: #B7E1EF;
+    color: #0E3A47;
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -191,7 +191,7 @@ html, body { font-family: 'Tajawal', sans-serif; background: #f8fafb; color: #1a
 }
 .btn-bulk-status:hover,
 .btn-bulk-discount:hover {
-    background: #145E74;
+    background: #8FCFE3;
 }
 .btn-bulk-delete {
     padding: 6px 14px;
@@ -262,7 +262,7 @@ html, body { font-family: 'Tajawal', sans-serif; background: #f8fafb; color: #1a
 .offer-product-item.selected { border-color: #1B7A97; background: #eff6ff; }
 .offer-product-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; margin-bottom: 6px; }
 .offer-product-item span { font-size: 0.75rem; line-height: 1.2; }
-.offer-product-check { position: absolute; top: 4px; right: 4px; background: #1B7A97; color: #fff; width: 18px; height: 18px; border-radius: 50%; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; }
+.offer-product-check { position: absolute; top: 4px; right: 4px; background: #B7E1EF; color: #0E3A47; width: 18px; height: 18px; border-radius: 50%; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; }
 
 /* Checkbox alignment */
 .checkbox-field { display: flex; align-items: center; gap: 8px; }

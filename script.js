@@ -1130,7 +1130,7 @@ function renderHeroSlider(slides) {
             '<div class="hero-content">' +
             (slide.title ? '<h1 style="font-size:2.8rem; font-weight:800; color:white; text-shadow:2px 2px 20px rgba(0,0,0,0.3); margin-bottom:12px;">' + slide.title + '</h1>' : '') +
             (slide.subtitle ? '<p style="font-size:1.3rem; color:rgba(255,255,255,0.9); margin-bottom:24px;">' + slide.subtitle + '</p>' : '') +
-            '<a href="#products" class="btn-primary" style="background:#1B7A97;color:#fff;border-radius:8px;padding:14px 35px;">تسوقي الآن</a>' +
+            '<a href="#products" class="btn-primary" style="background:#B7E1EF;color:#0E3A47;border-radius:8px;padding:14px 35px;">تسوقي الآن</a>' +
             '</div>';
         return '<div class="hero-slide' + (idx === 0 ? ' active' : '') + '">' + mediaHTML + captionHTML + '</div>';
     }).join('');
