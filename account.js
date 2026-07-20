@@ -137,8 +137,8 @@
             var redeemVal = (loyaltyCfg.redeemValue || 0.1) * pts;
             var html = '';
             html += '<div class="acc-head"><div class="acc-avatar">' + esc(firstName(d.name).charAt(0)) + '</div>';
-            html += '<div><h2>' + esc(d.name) + '</h2><p class="acc-phone">' + esc(d.phone) + '</p></div>';
-            html += '<button class="acc-logout" onclick="logoutCustomer()">خروج</button></div>';
+            html += '<div class="acc-head-id"><h2>' + esc(d.name) + '</h2><p class="acc-phone">' + esc(d.phone) + '</p></div>';
+            html += '<button class="acc-logout" onclick="confirmLogout()" aria-label="تسجيل الخروج"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>خروج</span></button></div>';
 
             if (loyaltyCfg.enabled) {
                 html += '<div class="loyalty-card tier-' + tier.id + '">';
@@ -157,6 +157,8 @@
             html += '<div class="acc-tabs">';
             html += '<button class="acc-tab active" data-at="orders" onclick="accTab(\'orders\')">طلباتي</button>';
             html += '<button class="acc-tab" data-at="wishlist" onclick="accTab(\'wishlist\')">المفضلة</button>';
+            html += '<button class="acc-tab" data-at="addresses" onclick="accTab(\'addresses\')">عناويني</button>';
+            html += '<button class="acc-tab" data-at="cards" onclick="accTab(\'cards\')">بطاقاتي</button>';
             html += '<button class="acc-tab" data-at="tickets" onclick="accTab(\'tickets\')">تذاكر الدعم</button>';
             html += '<button class="acc-tab" data-at="profile" onclick="accTab(\'profile\')">الملف</button>';
             html += '</div>';
@@ -176,6 +178,32 @@
         renderAuth('login');
     };
 
+    // Polished, intentional sign-out with a confirmation sheet.
+    window.confirmLogout = function () {
+        var host = document.getElementById('accountModalBody');
+        if (!host) { window.logoutCustomer(); return; }
+        var prev = document.getElementById('logoutConfirm');
+        if (prev) prev.parentNode.removeChild(prev);
+        var el = document.createElement('div');
+        el.id = 'logoutConfirm';
+        el.className = 'acc-confirm';
+        el.innerHTML =
+            '<div class="acc-confirm-sheet" role="dialog" aria-modal="true">' +
+            '<div class="acc-confirm-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>' +
+            '<h4>تسجيل الخروج؟</h4><p>سيتم إنهاء جلستك على هذا الجهاز. تبقى نقاطك وطلباتك محفوظة في حسابك.</p>' +
+            '<div class="acc-confirm-actions"><button class="acc-btn-ghost" onclick="dismissLogout()">إلغاء</button>' +
+            '<button class="acc-btn-danger" onclick="logoutCustomer()">تأكيد الخروج</button></div></div>';
+        el.addEventListener('click', function (e) { if (e.target === el) window.dismissLogout(); });
+        host.appendChild(el);
+        void el.offsetWidth; el.classList.add('is-open');
+    };
+    window.dismissLogout = function () {
+        var el = document.getElementById('logoutConfirm');
+        if (!el) return;
+        el.classList.remove('is-open');
+        setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 220);
+    };
+
     window.accTab = function (which) {
         var body = document.getElementById('accTabBody');
         var tabs = document.querySelectorAll('.acc-tab');
@@ -184,6 +212,8 @@
         var c = window.getCurrentCustomer();
         if (which === 'orders') { body.innerHTML = spinner(); loadMyOrders(body, c); }
         else if (which === 'wishlist') { renderWishlist(body, c); }
+        else if (which === 'addresses') { renderAddresses(body, c); }
+        else if (which === 'cards') { renderCards(body, c); }
         else if (which === 'tickets') { body.innerHTML = spinner(); loadMyTickets(body, c); }
         else if (which === 'profile') { renderProfile(body, c); }
     };
@@ -242,6 +272,146 @@
                 window.showToast('تم حفظ التعديلات', 'success');
             }).catch(function () { window.showToast('تعذر الحفظ', 'error'); });
         return false;
+    };
+
+    /* -------- Saved addresses -------- */
+    var REGION_LABELS = { westbank: 'الضفة', jerusalem: 'القدس', inside: 'الداخل' };
+
+    function renderAddresses(body, c) {
+        var list = (window.getCurrentCustomer().addresses) || [];
+        var html = '<div class="acc-panel-head"><p class="acc-panel-sub">عناوينك المحفوظة تُملأ تلقائياً عند إتمام الطلب.</p>' +
+            '<button class="acc-add-btn" onclick="openAddrForm()">+ عنوان جديد</button></div>';
+        if (!list.length) {
+            html += empty('لا يوجد عناوين محفوظة', 'أضيفي عنواناً لتسريع الطلبات القادمة');
+        } else {
+            html += '<div class="acc-saved-list">';
+            list.forEach(function (a) {
+                html += '<div class="acc-saved-card">' +
+                    '<div class="acc-saved-main"><div class="acc-saved-title">' + esc(a.label) +
+                    (a.isDefault ? '<span class="acc-default-pill">افتراضي</span>' : '') + '</div>' +
+                    '<div class="acc-saved-line">' + esc(REGION_LABELS[a.region] || '') + (a.city ? ' • ' + esc(a.city) : '') + '</div>' +
+                    '<div class="acc-saved-line dim">' + esc(a.details) + (a.phone ? ' • ' + esc(a.phone) : '') + '</div></div>' +
+                    '<div class="acc-saved-actions">' +
+                    (a.isDefault ? '' : '<button class="acc-mini" onclick="setDefaultAddr(\'' + a.id + '\')">تعيين افتراضي</button>') +
+                    '<button class="acc-mini" onclick="openAddrForm(\'' + a.id + '\')">تعديل</button>' +
+                    '<button class="acc-mini danger" onclick="deleteAddr(\'' + a.id + '\')">حذف</button></div></div>';
+            });
+            html += '</div>';
+        }
+        body.innerHTML = html;
+    }
+
+    window.openAddrForm = function (id) {
+        var list = (window.getCurrentCustomer().addresses) || [];
+        var a = id ? list.filter(function (x) { return x.id === id; })[0] : null;
+        a = a || { label: '', region: 'westbank', city: '', details: '', phone: '' };
+        var body = document.getElementById('accTabBody');
+        var regs = ['westbank', 'jerusalem', 'inside'];
+        var opts = regs.map(function (r) { return '<option value="' + r + '"' + (a.region === r ? ' selected' : '') + '>' + REGION_LABELS[r] + '</option>'; }).join('');
+        body.innerHTML = '<form class="acc-form" onsubmit="return saveAddr(event,' + (id ? '\'' + id + '\'' : 'null') + ')">' +
+            '<div class="auth-field"><label>الاسم المختصر</label><input id="adLabel" type="text" value="' + esc(a.label) + '" placeholder="البيت، العمل..." required></div>' +
+            '<div class="acc-form-row"><div class="auth-field"><label>المنطقة</label><select id="adRegion">' + opts + '</select></div>' +
+            '<div class="auth-field"><label>المدينة</label><input id="adCity" type="text" value="' + esc(a.city) + '" placeholder="المدينة"></div></div>' +
+            '<div class="auth-field"><label>تفاصيل العنوان</label><textarea id="adDetails" rows="2" placeholder="الحي، الشارع، أقرب معلم..." required>' + esc(a.details) + '</textarea></div>' +
+            '<div class="auth-field"><label>هاتف للتواصل (اختياري)</label><input id="adPhone" type="tel" value="' + esc(a.phone || '') + '" placeholder="05xxxxxxxx"></div>' +
+            '<div class="acc-form-actions"><button type="button" class="acc-btn-ghost" onclick="accTab(\'addresses\')">رجوع</button>' +
+            '<button type="submit" class="btn-primary auth-submit">حفظ العنوان</button></div></form>';
+    };
+    window.saveAddr = function (e, id) {
+        e.preventDefault();
+        var c = window.getCurrentCustomer();
+        var payload = {
+            id: id || undefined,
+            label: document.getElementById('adLabel').value,
+            region: document.getElementById('adRegion').value,
+            city: document.getElementById('adCity').value,
+            details: document.getElementById('adDetails').value,
+            phone: document.getElementById('adPhone').value
+        };
+        window.shSaveAddress(c.id, payload).then(function () {
+            window.showToast('تم حفظ العنوان', 'success'); accTab('addresses');
+        }).catch(function (err) { window.showToast(err.message || 'تعذر الحفظ', 'error'); });
+        return false;
+    };
+    window.deleteAddr = function (id) {
+        var c = window.getCurrentCustomer();
+        window.shDeleteAddress(c.id, id).then(function () {
+            window.showToast('تم حذف العنوان', 'info'); accTab('addresses');
+        }).catch(function () { window.showToast('تعذر الحذف', 'error'); });
+    };
+    window.setDefaultAddr = function (id) {
+        var c = window.getCurrentCustomer();
+        window.shSetDefaultAddress(c.id, id).then(function () { accTab('addresses'); });
+    };
+
+    /* -------- Saved cards (display metadata only) -------- */
+    function brandMark(brand) {
+        return '<span class="acc-card-brand brand-' + esc(brand) + '">' + esc(window.shCardBrandLabel(brand)) + '</span>';
+    }
+    function renderCards(body, c) {
+        var list = (window.getCurrentCustomer().cards) || [];
+        var html = '<div class="acc-panel-head"><p class="acc-panel-sub">بطاقاتك محفوظة للعرض فقط — تتم المعالجة بأمان عبر بوابة البنك.</p>' +
+            '<button class="acc-add-btn" onclick="openCardForm()">+ بطاقة جديدة</button></div>';
+        if (!list.length) {
+            html += empty('لا توجد بطاقات محفوظة', 'أضيفي بطاقة لإتمام الدفع بشكل أسرع');
+        } else {
+            html += '<div class="acc-cards-grid">';
+            list.forEach(function (cd) {
+                html += '<div class="acc-pay-card brand-' + esc(cd.brand) + '">' +
+                    '<div class="acc-pay-top">' + brandMark(cd.brand) + (cd.isDefault ? '<span class="acc-default-pill light">افتراضي</span>' : '') + '</div>' +
+                    '<div class="acc-pay-num">•••• •••• •••• ' + esc(cd.last4) + '</div>' +
+                    '<div class="acc-pay-foot"><span>' + esc(cd.holder || '') + '</span><span>' + esc((cd.expMonth || '') + '/' + (cd.expYear || '')) + '</span></div>' +
+                    '<div class="acc-pay-actions">' +
+                    (cd.isDefault ? '' : '<button class="acc-mini" onclick="setDefaultCard(\'' + cd.id + '\')">افتراضي</button>') +
+                    '<button class="acc-mini danger" onclick="deleteCard(\'' + cd.id + '\')">حذف</button></div></div>';
+            });
+            html += '</div>';
+        }
+        body.innerHTML = html;
+    }
+    window.openCardForm = function () {
+        var body = document.getElementById('accTabBody');
+        var years = [];
+        var y = new Date().getFullYear();
+        for (var i = 0; i < 9; i++) years.push(String((y + i) % 100).padStart(2, '0'));
+        var months = [];
+        for (var m = 1; m <= 12; m++) months.push(('0' + m).slice(-2));
+        body.innerHTML = '<form class="acc-form" onsubmit="return saveCard(event)">' +
+            '<div class="acc-secure-note"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> لا نحفظ رقم بطاقتك كاملاً — فقط آخر 4 أرقام للعرض.</div>' +
+            '<div class="auth-field"><label>اسم حامل البطاقة</label><input id="cdHolder" type="text" placeholder="كما هو مكتوب على البطاقة" required></div>' +
+            '<div class="auth-field"><label>رقم البطاقة</label><input id="cdNumber" type="tel" inputmode="numeric" maxlength="19" placeholder="0000 0000 0000 0000" oninput="fmtCardInput(this)" required></div>' +
+            '<div class="acc-form-row"><div class="auth-field"><label>الشهر</label><select id="cdMonth">' + months.map(function (mm) { return '<option>' + mm + '</option>'; }).join('') + '</select></div>' +
+            '<div class="auth-field"><label>السنة</label><select id="cdYear">' + years.map(function (yy) { return '<option>' + yy + '</option>'; }).join('') + '</select></div></div>' +
+            '<div class="acc-form-actions"><button type="button" class="acc-btn-ghost" onclick="accTab(\'cards\')">رجوع</button>' +
+            '<button type="submit" class="btn-primary auth-submit">حفظ البطاقة</button></div></form>';
+    };
+    window.fmtCardInput = function (el) {
+        var v = el.value.replace(/[^\d]/g, '').slice(0, 16);
+        el.value = v.replace(/(.{4})/g, '$1 ').trim();
+    };
+    window.saveCard = function (e) {
+        e.preventDefault();
+        var c = window.getCurrentCustomer();
+        var payload = {
+            number: document.getElementById('cdNumber').value,
+            holder: document.getElementById('cdHolder').value,
+            expMonth: document.getElementById('cdMonth').value,
+            expYear: document.getElementById('cdYear').value
+        };
+        window.shSaveCard(c.id, payload).then(function () {
+            window.showToast('تم حفظ البطاقة', 'success'); accTab('cards');
+        }).catch(function (err) { window.showToast(err.message || 'تعذر الحفظ', 'error'); });
+        return false;
+    };
+    window.deleteCard = function (id) {
+        var c = window.getCurrentCustomer();
+        window.shDeleteCard(c.id, id).then(function () {
+            window.showToast('تم حذف البطاقة', 'info'); accTab('cards');
+        }).catch(function () { window.showToast('تعذر الحذف', 'error'); });
+    };
+    window.setDefaultCard = function (id) {
+        var c = window.getCurrentCustomer();
+        window.shSetDefaultCard(c.id, id).then(function () { accTab('cards'); });
     };
 
     /* -------- wishlist toggle (called from product cards/PDP) -------- */

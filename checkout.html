@@ -9,10 +9,10 @@
     <style>
         .checkout-page { min-height: 100vh; padding: 100px 20px 60px; background: var(--bg); }
         .checkout-container { max-width: 900px; margin: 0 auto; }
-        .checkout-title { text-align: center; font-size: 2rem; font-weight: 900; color: var(--primary-dark); margin-bottom: 30px; }
+        .checkout-title { text-align: center; font-size: 2rem; font-weight: 900; color: var(--ink, #0E3A47); margin-bottom: 30px; }
         .checkout-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 25px; }
         .checkout-card { background: white; border-radius: var(--radius); padding: 25px; box-shadow: var(--shadow); }
-        .checkout-card h3 { font-size: 1.2rem; color: var(--primary-dark); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--primary-lighter); }
+        .checkout-card h3 { font-size: 1.2rem; color: var(--ink, #0E3A47); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--primary-lighter); }
         .checkout-item { display: flex; gap: 12px; padding: 12px; background: var(--bg-alt); border-radius: 12px; margin-bottom: 10px; align-items: center; }
         .checkout-item img { width: 60px; height: 60px; object-fit: contain; border-radius: 8px; background: white; padding: 4px; }
         .checkout-item.custom-package-checkout { align-items: flex-start; }
@@ -20,16 +20,6 @@
         .custom-package-badge { display: inline-block; margin-top: 4px; font-size: 0.85rem; color: var(--primary-dark); font-weight: 700; }
         .checkout-item-note, .checkout-item-meta-block { display: block; color: var(--text-light); font-size: 0.85rem; line-height: 1.7; margin-top: 6px; }
         .checkout-item-price.pending { color: var(--primary-dark); font-size: 0.95rem; }
-        .checkout-success-card { background: white; border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow); text-align: center; }
-        .checkout-success-card h3 { margin-bottom: 10px; color: var(--primary-dark); font-size: 1.4rem; }
-        .checkout-success-card p { color: var(--text-light); margin-bottom: 18px; line-height: 1.9; }
-        .checkout-success-order-id { display: inline-flex; padding: 10px 16px; border-radius: 999px; background: var(--primary-lighter); color: var(--primary-dark); font-weight: 800; margin-bottom: 18px; }
-        .checkout-success-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-        .checkout-success-actions a, .checkout-success-actions button { min-width: 190px; padding: 14px 18px; border-radius: 12px; border: none; font-family: 'Tajawal', sans-serif; font-weight: 700; font-size: 0.96rem; cursor: pointer; text-decoration: none; transition: var(--transition); }
-        .checkout-success-actions .btn-success-whatsapp { background: #25d366; color: white; }
-        .checkout-success-actions .btn-success-whatsapp:hover { background: #1da851; }
-        .checkout-success-actions .btn-success-back { background: var(--primary); color: white; }
-        .checkout-success-actions .btn-success-back:hover { background: var(--primary-dark); }
         .checkout-item-info { flex: 1; }
         .checkout-item-info h4 { font-size: 0.95rem; margin-bottom: 3px; }
         .checkout-item-info .item-brand, .checkout-item-info .item-size { display: block; font-size: 0.8rem; color: var(--text-light); }
@@ -56,9 +46,62 @@
         .form-group label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem; }
         .form-group input, .form-group textarea { width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-family: 'Tajawal', sans-serif; font-size: 0.95rem; transition: var(--transition); }
         .form-group input:focus, .form-group textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(212,175,55,0.18); }
-        .btn-whatsapp-order { width: 100%; padding: 14px; background: #25d366; color: white; border: none; border-radius: 12px; font-family: 'Tajawal', sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; transition: var(--transition); margin-top: 10px; text-decoration: none; display: block; text-align: center; }
-        .btn-whatsapp-order:hover { background: #1da851; }
-        .btn-whatsapp-order:disabled { opacity: 0.6; cursor: wait; }
+        .btn-place-order { width: 100%; padding: 15px; background: var(--ink, #0E3A47); color: #fff; border: none; border-radius: 12px; font-family: 'Tajawal', sans-serif; font-size: 1.02rem; font-weight: 800; cursor: pointer; transition: transform .25s cubic-bezier(.22,1,.36,1), background .25s; margin-top: 14px; }
+        .btn-place-order:hover { background: #0a2c36; transform: translateY(-2px); }
+        .btn-place-order:disabled { opacity: 0.6; cursor: wait; transform: none; }
+        .pay-badge { margin-top: 14px; padding: 10px 14px; border-radius: 10px; background: var(--primary-lighter); color: var(--ink, #0E3A47); font-weight: 700; font-size: 0.9rem; text-align: center; }
+        .checkout-secure-line { display:flex; align-items:center; justify-content:center; gap:6px; margin-top:12px; color: var(--text-light); font-size: 0.8rem; }
+        /* payment options */
+        .pay-options { display:flex; flex-direction:column; gap:10px; margin-top:6px; }
+        .pay-option { display:flex; align-items:center; gap:12px; padding:15px; border:2px solid var(--primary-light); border-radius:12px; cursor:pointer; transition: var(--transition); }
+        .pay-option:hover, .pay-option.selected { border-color: var(--primary); background: var(--primary-lighter); }
+        .pay-option .radio-dot { width:20px; height:20px; border-radius:50%; border:2px solid var(--primary-light); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .pay-option.selected .radio-dot { border-color: var(--primary); }
+        .pay-option.selected .radio-dot::after { content:''; width:10px; height:10px; border-radius:50%; background: var(--primary); }
+        .pay-option-info { flex:1; } .pay-option-info h4 { font-size:0.98rem; } .pay-option-info p { font-size:0.8rem; color: var(--text-light); margin-top:2px; }
+        .pay-ico { font-size:1.4rem; }
+        .pay-brands { display:flex; gap:6px; } .pay-brands i { font-style:normal; font-weight:800; font-size:0.7rem; padding:4px 7px; border-radius:6px; background:#fff; border:1px solid var(--primary-light); color: var(--ink,#0E3A47); }
+        .card-panel { margin-top:14px; padding:16px; border-radius:12px; background: var(--bg-alt); }
+        .saved-cards { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+        .saved-card-chip { display:flex; align-items:center; gap:8px; padding:9px 12px; border:2px solid var(--primary-light); background:#fff; border-radius:10px; cursor:pointer; font-family:'Tajawal',sans-serif; font-size:0.85rem; font-weight:700; transition: var(--transition); }
+        .saved-card-chip.on { border-color: var(--primary); background: var(--primary-lighter); }
+        .saved-card-chip .scc-brand { font-size:0.68rem; padding:3px 6px; border-radius:5px; background: var(--ink,#0E3A47); color:#fff; }
+        .saved-card-chip.add { color: var(--brand-accent,#1B7A97); }
+        .gateway-form { display:flex; flex-direction:column; gap:12px; opacity:0.75; }
+        .gw-row { display:flex; gap:12px; } .gw-row .gw-field { flex:1; }
+        .gw-field label { display:block; font-size:0.82rem; font-weight:700; margin-bottom:5px; color: var(--text-light); }
+        .gw-field input { width:100%; padding:11px 14px; border:2px dashed var(--primary-light); border-radius:10px; background:#fff; font-family:'Tajawal',sans-serif; font-size:0.9rem; }
+        .gateway-note { display:flex; gap:8px; margin-top:14px; padding:11px 13px; border-radius:10px; background: var(--primary-lighter); color: var(--ink,#0E3A47); font-size:0.82rem; line-height:1.7; }
+        .gateway-note svg { flex-shrink:0; margin-top:3px; }
+        /* saved addresses */
+        .saved-addr-wrap { margin-top:14px; }
+        .saved-addr-label { font-size:0.85rem; font-weight:700; color: var(--text-light); margin-bottom:8px; }
+        .saved-addr-chips { display:flex; flex-wrap:wrap; gap:8px; }
+        .addr-chip { display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:8px 13px; border:2px solid var(--primary-light); background:#fff; border-radius:10px; cursor:pointer; font-family:'Tajawal',sans-serif; text-align:right; transition: var(--transition); }
+        .addr-chip.on { border-color: var(--primary); background: var(--primary-lighter); }
+        .addr-chip b { font-size:0.85rem; } .addr-chip span { font-size:0.75rem; color: var(--text-light); }
+        /* order success */
+        .order-success { background:#fff; border-radius:18px; padding:40px 28px; box-shadow: var(--shadow); text-align:center; max-width:560px; margin:0 auto; animation: osIn .5s cubic-bezier(.22,1,.36,1) both; }
+        @keyframes osIn { from { opacity:0; transform: translateY(14px); } to { opacity:1; transform:none; } }
+        .os-check { width:74px; height:74px; margin:0 auto 18px; border-radius:50%; background: var(--primary-lighter); color: var(--brand-accent,#1B7A97); display:flex; align-items:center; justify-content:center; animation: osPop .5s cubic-bezier(.22,1,.36,1) .1s both; }
+        @keyframes osPop { from { transform: scale(.6); opacity:0; } to { transform: scale(1); opacity:1; } }
+        .order-success h2 { font-size:1.5rem; color: var(--ink,#0E3A47); margin-bottom:8px; }
+        .os-sub { color: var(--text-light); margin-bottom:22px; }
+        .os-idcard { border:2px dashed var(--primary-light); border-radius:14px; padding:16px; margin-bottom:20px; background: var(--bg-alt); }
+        .os-id-label { display:block; font-size:0.8rem; color: var(--text-light); margin-bottom:8px; }
+        .os-id-row { display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; }
+        .os-id-row code { font-family:'Courier New',monospace; font-size:1.25rem; font-weight:800; letter-spacing:1px; color: var(--ink,#0E3A47); direction:ltr; }
+        .os-copy { display:inline-flex; align-items:center; gap:6px; padding:9px 14px; border:none; border-radius:10px; background: var(--ink,#0E3A47); color:#fff; font-family:'Tajawal',sans-serif; font-weight:700; font-size:0.85rem; cursor:pointer; transition: background .25s, transform .2s; }
+        .os-copy:hover { transform: translateY(-1px); }
+        .os-copy.copied { background: var(--brand-accent,#1B7A97); }
+        .os-summary { text-align:right; border-top:1px solid var(--primary-lighter); padding-top:16px; margin-bottom:22px; }
+        .os-line { display:flex; justify-content:space-between; gap:12px; padding:8px 0; font-size:0.92rem; border-bottom:1px solid #f1f5f8; }
+        .os-line:last-child { border-bottom:none; } .os-line span { color: var(--text-light); } .os-line b { color: var(--ink,#0E3A47); text-align:left; }
+        .os-actions { display:flex; gap:12px; flex-wrap:wrap; }
+        .os-actions button { flex:1; min-width:150px; padding:14px; border-radius:12px; font-family:'Tajawal',sans-serif; font-weight:800; font-size:0.95rem; cursor:pointer; transition: transform .2s, background .25s; }
+        .os-btn-primary { border:none; background: var(--ink,#0E3A47); color:#fff; } .os-btn-primary:hover { background:#0a2c36; transform: translateY(-2px); }
+        .os-btn-ghost { border:2px solid var(--primary); background:#fff; color: var(--ink,#0E3A47); } .os-btn-ghost:hover { background: var(--primary-lighter); transform: translateY(-2px); }
+        @media (prefers-reduced-motion: reduce) { .order-success, .os-check, .btn-place-order, .os-actions button, .os-copy { animation:none !important; transition:none !important; } }
         .back-link { display: inline-block; margin-bottom: 20px; color: var(--primary); text-decoration: none; font-weight: 600; }
         .back-link:hover { text-decoration: underline; }
         .empty-checkout { text-align: center; padding: 60px; background: white; border-radius: var(--radius); box-shadow: var(--shadow); }
@@ -114,6 +157,11 @@
         var loyaltyCfg = null;
         var currentCust = null;
         var useLoyaltyRedeem = false;
+
+        // Payment state (bank gateway prepared; COD is the only live method for now)
+        var selectedPayment = localStorage.getItem('drenasshop_payment_method') || 'cod';
+        var selectedCardId = null;
+        var selectedAddressId = null;
 
         var DELIVERY_COSTS = { westbank: 20, jerusalem: 30, inside: 50 };
         var DELIVERY_LABELS = { westbank: 'الضفة', jerusalem: 'القدس', inside: 'الداخل' };
@@ -277,6 +325,7 @@
             html += '<div class="delivery-option ' + (selectedDelivery === 'delivery' ? 'selected' : '') + '" onclick="selectDelivery(\'delivery\')"><div class="radio-dot"></div><div class="delivery-option-info"><h4>توصيل للعنوان</h4><p>توصيل لجميع مناطق الضفة، القدس، والداخل</p></div></div>';
             html += '</div>';
             if (selectedDelivery === 'delivery') {
+                html += savedAddressChips();
                 html += '<div class="delivery-regions" style="margin-top:15px;">';
                 html += '<h4 style="margin-bottom:10px; font-size:0.95rem;">اختاري المنطقة:</h4>';
                 html += '<div class="region-options">';
@@ -293,6 +342,7 @@
             html += '<div class="form-group" id="addressGroup" style="' + (selectedDelivery === 'pickup' ? 'display:none' : '') + '"><label>العنوان (المدينة + تفاصيل)</label><textarea id="custAddress" rows="2" placeholder="المدينة، الحي، الشارع..."></textarea></div>';
             html += '<div class="form-group"><label>ملاحظات إضافية (اختياري)</label><textarea id="custNotes" rows="2" placeholder="أي ملاحظات على الطلب..."></textarea></div>';
             html += '</div>';
+            html += renderPaymentSection();
             html += '</div>';
             html += '<div><div class="checkout-card" style="position:sticky; top:80px;">';
             html += '<h3>ملخص الطلب</h3>';
@@ -311,10 +361,98 @@
                 }
             }
             html += '<div class="summary-row total"><span>المجموع:</span><span>' + getTotalDisplayText(getPayableTotal(), hasPending) + '</span></div>';
-            html += '<button type="button" class="btn-whatsapp-order" id="confirmOrderBtn" onclick="confirmOrder()">حفظ الطلب</button>';
+            html += '<div class="pay-badge">' + payMethodSummary() + '</div>';
+            html += '<button type="button" class="btn-place-order" id="confirmOrderBtn" onclick="confirmOrder()">تأكيد الطلب</button>';
+            html += '<p class="checkout-secure-line"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> معاملة آمنة ومحمية</p>';
             html += '</div></div></div></div>';
             container.innerHTML = html;
             restoreFormValues(formData);
+        }
+
+        function savedAddressChips() {
+            if (!currentCust || !Array.isArray(currentCust.addresses) || !currentCust.addresses.length) return '';
+            var REG = { westbank: 'الضفة', jerusalem: 'القدس', inside: 'الداخل' };
+            var chips = currentCust.addresses.map(function (a) {
+                var on = selectedAddressId === a.id;
+                return '<button type="button" class="addr-chip' + (on ? ' on' : '') + '" onclick="pickAddress(\'' + a.id + '\')">' +
+                    '<b>' + escapeHtml(a.label) + '</b><span>' + escapeHtml(REG[a.region] || '') + (a.city ? ' • ' + escapeHtml(a.city) : '') + '</span></button>';
+            }).join('');
+            return '<div class="saved-addr-wrap"><div class="saved-addr-label">عناوينك المحفوظة</div><div class="saved-addr-chips">' + chips + '</div></div>';
+        }
+
+        window.pickAddress = function (id) {
+            var a = (currentCust.addresses || []).filter(function (x) { return x.id === id; })[0];
+            if (!a) return;
+            selectedAddressId = id;
+            var formData = getFormValues();
+            selectedRegion = a.region || selectedRegion;
+            render();
+            formData.address = (a.city ? a.city + '، ' : '') + a.details;
+            if (a.phone) formData.phone = formData.phone || a.phone;
+            restoreFormValues(formData);
+        };
+
+        function renderPaymentSection() {
+            var s = '';
+            s += '<div class="checkout-card" style="margin-top:20px;">';
+            s += '<h3>طريقة الدفع</h3>';
+            s += '<div class="pay-options">';
+            s += '<div class="pay-option ' + (selectedPayment === 'cod' ? 'selected' : '') + '" onclick="selectPayment(\'cod\')">' +
+                '<div class="radio-dot"></div><div class="pay-option-info"><h4>الدفع عند الاستلام</h4><p>ادفعي نقداً عند وصول طلبك</p></div>' +
+                '<span class="pay-ico">💵</span></div>';
+            s += '<div class="pay-option ' + (selectedPayment === 'card' ? 'selected' : '') + '" onclick="selectPayment(\'card\')">' +
+                '<div class="radio-dot"></div><div class="pay-option-info"><h4>بطاقة / دفع إلكتروني</h4><p>عبر بوابة البنك الآمنة</p></div>' +
+                '<span class="pay-brands"><i>VISA</i><i>MC</i></span></div>';
+            s += '</div>';
+            if (selectedPayment === 'card') s += renderCardPanel();
+            s += '</div>';
+            return s;
+        }
+
+        function renderCardPanel() {
+            var p = '<div class="card-panel">';
+            // Saved cards for logged-in customers
+            if (currentCust && Array.isArray(currentCust.cards) && currentCust.cards.length) {
+                p += '<div class="saved-cards">';
+                currentCust.cards.forEach(function (cd) {
+                    var on = selectedCardId === cd.id || (!selectedCardId && cd.isDefault);
+                    p += '<button type="button" class="saved-card-chip' + (on ? ' on' : '') + '" onclick="pickCard(\'' + cd.id + '\')">' +
+                        '<span class="scc-brand">' + escapeHtml(cd.brand === 'visa' ? 'Visa' : cd.brand === 'mastercard' ? 'MC' : 'بطاقة') + '</span>' +
+                        '<span class="scc-num">•••• ' + escapeHtml(cd.last4) + '</span></button>';
+                });
+                p += '<button type="button" class="saved-card-chip add' + (selectedCardId === 'new' ? ' on' : '') + '" onclick="pickCard(\'new\')">+ بطاقة جديدة</button>';
+                p += '</div>';
+            }
+            var showForm = !(currentCust && currentCust.cards && currentCust.cards.length) || selectedCardId === 'new';
+            if (showForm) {
+                p += '<div class="gateway-form" aria-disabled="true">' +
+                    '<div class="gw-field"><label>رقم البطاقة</label><input type="tel" inputmode="numeric" placeholder="0000 0000 0000 0000" disabled></div>' +
+                    '<div class="gw-row"><div class="gw-field"><label>تاريخ الانتهاء</label><input type="text" placeholder="MM/YY" disabled></div>' +
+                    '<div class="gw-field"><label>CVV</label><input type="text" placeholder="•••" disabled></div></div>' +
+                    '</div>';
+            }
+            p += '<div class="gateway-note"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
+                '<span>بوابة الدفع الإلكتروني قيد التفعيل. سيتم تحويلك لصفحة البنك الآمنة لإتمام الدفع عند الربط — حالياً يُسجَّل طلبك ونتواصل معك لإتمام الدفع.</span></div>';
+            p += '</div>';
+            return p;
+        }
+
+        window.selectPayment = function (method) {
+            var formData = getFormValues();
+            selectedPayment = method;
+            localStorage.setItem('drenasshop_payment_method', method);
+            render();
+            restoreFormValues(formData);
+        };
+        window.pickCard = function (id) {
+            var formData = getFormValues();
+            selectedCardId = id;
+            render();
+            restoreFormValues(formData);
+        };
+        function payMethodSummary() {
+            if (selectedPayment === 'card') return '💳 دفع إلكتروني عبر بوابة البنك';
+            return '💵 الدفع عند الاستلام';
         }
 
         function getSubtotal() {
@@ -528,56 +666,65 @@
                 pointsDiscount: pointsDiscount,
                 totalDisplay: getTotalDisplayText(payable, pricingPending),
                 pricingPending: pricingPending,
+                paymentMethod: selectedPayment,
+                paymentStatus: selectedPayment === 'card' ? 'awaiting_gateway' : 'cod_pending',
+                paymentCardLast4: (selectedPayment === 'card' && selectedCardId && selectedCardId !== 'new' && currentCust && currentCust.cards)
+                    ? (currentCust.cards.filter(function (x) { return x.id === selectedCardId; })[0] || {}).last4 || null
+                    : null,
                 date: new Date().toISOString(),
                 status: 'new'
             };
         }
 
-        function buildWhatsAppMessage(order) {
-            var itemsText = (order.items || []).map(function (item, index) {
-                if (item.type === 'custom_package') {
-                    var packageLines = (item.sets || []).map(function (setItem, setIndex) {
-                        return '   - تشكيلة ' + (setIndex + 1) + ': ' + getPackagingTypeLabel(setItem.chocolateType) + ' / ' + getPackagingFillingLabel(setItem.filling) + ' / الكمية ' + (parseInt(setItem.qty, 10) || 1);
-                    }).join('\n');
-                    var locationLine = item.delivery === 'delivery' && item.customerLocation ? '\n   الموقع: ' + item.customerLocation : '';
-                    var noteLine = item.notes ? '\n   ملاحظات: ' + item.notes : '';
-                    return (index + 1) + '. ' + item.name + '\n   لون التغليف: ' + getWrapperColorLabel(item.wrapperColor) + '\n' + packageLines + '\n   الاستلام: ' + (item.delivery === 'pickup' ? 'استلام من المصنع' : 'توصيل') + '\n   الاسم: ' + item.customerName + ' • الهاتف: ' + item.customerPhone + locationLine + noteLine + '\n   السعر: يحدد لاحقاً';
-                }
-                return (index + 1) + '. ' + item.name + ' (' + item.sizeLabel + ')\n   السعر: ' + item.price + ' شيكل × ' + item.qty + ' = ' + item.lineTotal + ' شيكل';
-            }).join('\n');
-            var shippingText = order.delivery === 'pickup' ? 'مجاني (استلام ذاتي)' : formatCurrency(order.deliveryCost) + ' (' + DELIVERY_LABELS[order.region] + ')';
-            var deliveryLabel = order.delivery === 'pickup' ? 'استلام ذاتي' : 'توصيل إلى ' + DELIVERY_LABELS[order.region] + ': ' + order.address;
-            var msg = 'مرحبا، طلب جديد (' + order.id + '):\n';
-            msg += 'ـــــــــــــــــــــــــــ\n';
-            msg += 'الاسم: ' + order.customerName + '\n';
-            msg += 'الهاتف: ' + order.customerPhone + '\n';
-            msg += 'ـــــــــــــــــــــــــــ\n';
-            msg += 'المنتجات:\n\n' + itemsText + '\n';
-            msg += 'ـــــــــــــــــــــــــــ\n';
-            msg += 'المجموع المعروف: ' + formatCurrency(order.total) + '\n';
-            msg += 'الشحن: ' + shippingText + '\n';
-            msg += 'الإجمالي النهائي: ' + (order.totalDisplay || getTotalDisplayText(order.total, !!order.pricingPending)) + '\n';
-            msg += 'ـــــــــــــــــــــــــــ\n';
-            msg += 'الاستلام: ' + deliveryLabel + '\n';
-            if (order.notes) msg += 'ملاحظات: ' + order.notes + '\n';
-            return msg;
-        }
-
         function showOrderSuccess(order) {
             var container = document.getElementById('checkoutContent');
-            var whatsappUrl = buildWhatsAppUrl(siteSettings.whatsappNumber || '970595170026', buildWhatsAppMessage(order));
+            var payLabel = order.paymentMethod === 'card' ? 'دفع إلكتروني عبر بوابة البنك (بانتظار الدفع)' : 'الدفع عند الاستلام';
+            var deliveryLabel = order.delivery === 'pickup' ? 'استلام ذاتي' : 'توصيل إلى ' + (DELIVERY_LABELS[order.region] || '') + (order.address ? ' — ' + order.address : '');
+            var itemsCount = (order.items || []).reduce(function (s, i) { return s + (parseInt(i.qty, 10) || 1); }, 0);
             var html = '';
-            html += '<div class="checkout-success-card">';
-            html += '<h3>تم حفظ طلبك بنجاح</h3>';
-            html += '<div class="checkout-success-order-id">رقم الطلب: ' + order.id + '</div>';
-            html += '<p>يمكنك الآن إرسال الطلب عبر واتساب بشكل اختياري، أو العودة مباشرة إلى صفحة التأكيد والمتجر.</p>';
-            html += '<div class="checkout-success-actions">';
-            html += '<a href="' + whatsappUrl + '" target="_blank" rel="noopener" class="btn-success-whatsapp">إرسال عبر واتساب</a>';
-            html += '<button type="button" class="btn-success-back" onclick="window.location.href=\'confirmation.html\'">تم، عودة للمتجر</button>';
+            html += '<div class="order-success">';
+            html += '<div class="os-check"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>';
+            html += '<h2>تم استلام طلبك بنجاح</h2>';
+            html += '<p class="os-sub">شكراً لكِ 💚 سنتواصل معكِ قريباً لتأكيد التفاصيل.</p>';
+            html += '<div class="os-idcard"><span class="os-id-label">رقم الطلب</span>' +
+                '<div class="os-id-row"><code id="orderIdVal">' + order.id + '</code>' +
+                '<button type="button" class="os-copy" id="copyOrderIdBtn" onclick="copyOrderId(\'' + order.id + '\')" aria-label="نسخ رقم الطلب">' +
+                '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>' +
+                '<span>نسخ</span></button></div></div>';
+            html += '<div class="os-summary">';
+            html += '<div class="os-line"><span>عدد المنتجات</span><b>' + itemsCount + ' قطعة</b></div>';
+            html += '<div class="os-line"><span>الإجمالي</span><b>' + (order.totalDisplay || formatCurrency(order.total)) + '</b></div>';
+            html += '<div class="os-line"><span>طريقة الدفع</span><b>' + payLabel + '</b></div>';
+            html += '<div class="os-line"><span>الاستلام</span><b>' + deliveryLabel + '</b></div>';
+            html += '</div>';
+            html += '<div class="os-actions">';
+            html += '<button type="button" class="os-btn-primary" onclick="window.location.href=\'index.html\'">متابعة التسوّق</button>';
+            html += '<button type="button" class="os-btn-ghost" onclick="window.location.href=\'confirmation.html\'">تفاصيل الطلب</button>';
             html += '</div></div>';
             container.innerHTML = html;
             setStatus('تم حفظ الطلب بنجاح. رقم الطلب: ' + order.id, 'success');
         }
+
+        window.copyOrderId = function (id) {
+            var btn = document.getElementById('copyOrderIdBtn');
+            function done() {
+                if (!btn) return;
+                btn.classList.add('copied');
+                var span = btn.querySelector('span'); if (span) span.textContent = 'تم النسخ ✓';
+                setTimeout(function () { btn.classList.remove('copied'); if (span) span.textContent = 'نسخ'; }, 1800);
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(id).then(done).catch(fallbackCopy);
+            } else { fallbackCopy(); }
+            function fallbackCopy() {
+                try {
+                    var t = document.createElement('textarea');
+                    t.value = id; t.style.position = 'fixed'; t.style.opacity = '0';
+                    document.body.appendChild(t); t.select(); document.execCommand('copy');
+                    document.body.removeChild(t); done();
+                } catch (e) { if (window.showToast) window.showToast('تعذر النسخ', 'error'); }
+            }
+        };
 
         function confirmOrder() {
             var customerName = document.getElementById('custName').value.trim();

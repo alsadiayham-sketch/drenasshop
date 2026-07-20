@@ -111,7 +111,11 @@
     window.setCurrentCustomer = function (c) {
         if (!c) { localStorage.removeItem(CUSTOMER_KEY); return; }
         localStorage.setItem(CUSTOMER_KEY, JSON.stringify({
-            id: c.id, name: c.name, phone: c.phone, email: c.email || ''
+            id: c.id, name: c.name, phone: c.phone, email: c.email || '',
+            wishlist: c.wishlist || [],
+            points: c.points || 0,
+            addresses: Array.isArray(c.addresses) ? c.addresses : [],
+            cards: Array.isArray(c.cards) ? c.cards : []
         }));
     };
     window.clearCurrentCustomer = function () { localStorage.removeItem(CUSTOMER_KEY); };
@@ -200,6 +204,134 @@
             window.setCurrentCustomer(c);
             return c;
         }).catch(function () { return cur; });
+    };
+
+    /* ============================================================
+       SAVED ADDRESSES & CARDS (customer self-service)
+       Cards store ONLY non-sensitive display metadata (brand, last4,
+       holder, expiry). Full PAN/CVV are never persisted — real charges
+       run through the bank payment gateway (tokenized) once configured.
+       ============================================================ */
+    function genId(prefix) {
+        return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    }
+    window.shGenId = genId;
+
+    // Detect card brand from a (client-side only) card number, for display.
+    window.shDetectCardBrand = function (number) {
+        var n = String(number || '').replace(/[^\d]/g, '');
+        if (/^4/.test(n)) return 'visa';
+        if (/^(5[1-5]|22[2-9]|2[3-6]|27[01]|2720)/.test(n)) return 'mastercard';
+        if (/^3[47]/.test(n)) return 'amex';
+        return 'card';
+    };
+    window.shCardBrandLabel = function (brand) {
+        return { visa: 'Visa', mastercard: 'Mastercard', amex: 'Amex', card: 'بطاقة' }[brand] || 'بطاقة';
+    };
+
+    // Generic array mutator on the customer doc, keeps session cache in sync.
+    function mutateCustomerArray(customerId, field, mutator) {
+        if (!window.db) return Promise.reject(new Error('تعذر الاتصال بقاعدة البيانات'));
+        var ref = window.db.collection('customers').doc(customerId);
+        return window.db.runTransaction(function (tx) {
+            return tx.get(ref).then(function (snap) {
+                if (!snap.exists) throw new Error('الحساب غير موجود');
+                var data = snap.data();
+                var arr = Array.isArray(data[field]) ? data[field].slice() : [];
+                arr = mutator(arr) || arr;
+                var patch = {}; patch[field] = arr; patch.updatedAt = new Date().toISOString();
+                tx.update(ref, patch);
+                return arr;
+            });
+        }).then(function (arr) {
+            var cur = window.getCurrentCustomer();
+            if (cur && cur.id === customerId) { cur[field] = arr; window.setCurrentCustomer(cur); }
+            return arr;
+        });
+    }
+
+    function markDefault(arr, id) {
+        for (var i = 0; i < arr.length; i++) arr[i].isDefault = (arr[i].id === id);
+        return arr;
+    }
+
+    /* ---- Addresses ---- */
+    window.shSaveAddress = function (customerId, addr) {
+        var label = String(addr.label || '').trim() || 'عنوان';
+        var region = addr.region || 'westbank';
+        var city = String(addr.city || '').trim();
+        var details = String(addr.details || '').trim();
+        var phone = normPhone(addr.phone);
+        if (!details) return Promise.reject(new Error('الرجاء إدخال تفاصيل العنوان'));
+        return mutateCustomerArray(customerId, 'addresses', function (arr) {
+            var makeDefault = !!addr.isDefault || arr.length === 0;
+            if (addr.id) {
+                for (var i = 0; i < arr.length; i++) {
+                    if (arr[i].id === addr.id) {
+                        arr[i] = { id: addr.id, label: label, region: region, city: city, details: details, phone: phone, isDefault: arr[i].isDefault };
+                    }
+                }
+            } else {
+                arr.push({ id: genId('addr'), label: label, region: region, city: city, details: details, phone: phone, isDefault: makeDefault });
+            }
+            if (makeDefault) markDefault(arr, addr.id || arr[arr.length - 1].id);
+            if (!arr.some(function (a) { return a.isDefault; }) && arr.length) arr[0].isDefault = true;
+            return arr;
+        });
+    };
+    window.shDeleteAddress = function (customerId, addrId) {
+        return mutateCustomerArray(customerId, 'addresses', function (arr) {
+            var was = arr.filter(function (a) { return a.id === addrId; })[0];
+            arr = arr.filter(function (a) { return a.id !== addrId; });
+            if (was && was.isDefault && arr.length) arr[0].isDefault = true;
+            return arr;
+        });
+    };
+    window.shSetDefaultAddress = function (customerId, addrId) {
+        return mutateCustomerArray(customerId, 'addresses', function (arr) { return markDefault(arr, addrId); });
+    };
+
+    /* ---- Cards (display metadata only) ---- */
+    window.shSaveCard = function (customerId, card) {
+        var digits = String(card.number || '').replace(/[^\d]/g, '');
+        var holder = String(card.holder || '').trim();
+        var last4 = card.last4 || (digits ? digits.slice(-4) : '');
+        var brand = card.brand || window.shDetectCardBrand(digits);
+        var expMonth = String(card.expMonth || '').trim();
+        var expYear = String(card.expYear || '').trim();
+        if (!card.id) {
+            if (last4.length !== 4) return Promise.reject(new Error('رقم البطاقة غير صحيح'));
+            if (!holder) return Promise.reject(new Error('الرجاء إدخال اسم حامل البطاقة'));
+            if (!expMonth || !expYear) return Promise.reject(new Error('الرجاء إدخال تاريخ الانتهاء'));
+        }
+        return mutateCustomerArray(customerId, 'cards', function (arr) {
+            var makeDefault = !!card.isDefault || arr.length === 0;
+            if (card.id) {
+                for (var i = 0; i < arr.length; i++) {
+                    if (arr[i].id === card.id) {
+                        arr[i].holder = holder || arr[i].holder;
+                        arr[i].expMonth = expMonth || arr[i].expMonth;
+                        arr[i].expYear = expYear || arr[i].expYear;
+                    }
+                }
+            } else {
+                arr.push({ id: genId('card'), brand: brand, last4: last4, holder: holder, expMonth: expMonth, expYear: expYear, isDefault: makeDefault });
+            }
+            if (makeDefault) markDefault(arr, card.id || arr[arr.length - 1].id);
+            if (!arr.some(function (a) { return a.isDefault; }) && arr.length) arr[0].isDefault = true;
+            return arr;
+        });
+    };
+    window.shDeleteCard = function (customerId, cardId) {
+        return mutateCustomerArray(customerId, 'cards', function (arr) {
+            var was = arr.filter(function (a) { return a.id === cardId; })[0];
+            arr = arr.filter(function (a) { return a.id !== cardId; });
+            if (was && was.isDefault && arr.length) arr[0].isDefault = true;
+            return arr;
+        });
+    };
+    window.shSetDefaultCard = function (customerId, cardId) {
+        return mutateCustomerArray(customerId, 'cards', function (arr) { return markDefault(arr, cardId); });
     };
 
     /* ============================================================

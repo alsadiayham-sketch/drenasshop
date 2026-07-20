@@ -1465,7 +1465,10 @@ function renderCartItems() {
     var footer = document.getElementById('cartFooter');
     if (!container) return;
     if (cart.length === 0) {
-        container.innerHTML = '<div class="cart-empty"><span>•</span><p>السلة فارغة</p></div>';
+        container.innerHTML = '<div class="cart-empty">' +
+            '<div class="cart-empty-ico"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>' +
+            '<p>سلتك فارغة</p><span>أضيفي منتجاتك المفضلة لتبدئي التسوّق</span>' +
+            '<button class="cart-empty-cta" onclick="toggleCart()">تصفّحي المنتجات</button></div>';
         if (footer) footer.style.display = 'none';
         return;
     }
@@ -1493,7 +1496,7 @@ function renderCartItems() {
         var group = comboGroups[offerId];
         var totalPrice = group.items.reduce(function(sum, item) { return sum + item.price; }, 0);
         html += '<div class="cart-combo-group">';
-        html += '<div class="cart-combo-header"><span>🎁 ' + group.title + ' - ₪' + Math.round(totalPrice) + '</span>';
+        html += '<div class="cart-combo-header"><span>🎁 ' + group.title + ' — ₪' + Math.round(totalPrice) + '</span>';
         html += '<button class="cart-combo-edit" onclick="editCombo(\'' + offerId + '\')">تعديل</button></div>';
         html += '<div class="cart-combo-items">';
         group.items.forEach(function(item) {
@@ -1503,7 +1506,7 @@ function renderCartItems() {
             }
         });
         html += '</div>';
-        html += '<button class="btn-clear-cart" style="font-size:0.75rem;padding:4px 10px;margin-top:8px;" onclick="removeCombo(\'' + offerId + '\')">حذف العرض</button>';
+        html += '<button class="cart-combo-remove" onclick="removeCombo(\'' + offerId + '\')">حذف العرض</button>';
         html += '</div>';
     });
 
@@ -1513,15 +1516,13 @@ function renderCartItems() {
             var p = products.find(function(pr) { return String(pr.id) === String(pid); });
             return p ? p.name : '';
         }).filter(Boolean).join('، ');
-        html += '<div class="cart-item cart-package-item">';
-        html += '<div style="width:50px;height:50px;background:#eff6ff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">📦</div>';
-        html += '<div class="cart-item-info"><h4>' + (item.packageName || 'باقة') + '</h4>';
-        html += '<span class="cart-item-size" style="font-size:0.7rem;color:#6b7280;">' + productNames + '</span>';
-        html += '<span class="cart-item-price">₪' + item.price + '</span></div>';
-        html += '<div class="cart-item-qty"><button onclick="changeCartQty(\'' + item.id + '\', 0, -1)">−</button>';
-        html += '<span>' + item.qty + '</span>';
-        html += '<button onclick="changeCartQty(\'' + item.id + '\', 0, 1)">+</button></div>';
-        html += '<button class="cart-item-remove" onclick="removeFromCart(\'' + item.id + '\', 0)">✕</button>';
+        html += '<div class="cart-item">';
+        html += '<div class="cart-item-thumb pkg">📦</div>';
+        html += '<div class="cart-item-main"><h4>' + (item.packageName || 'باقة') + '</h4>';
+        html += '<span class="cart-item-sub">' + productNames + '</span>';
+        html += '<div class="cart-item-row"><div class="cart-qty"><button onclick="changeCartQty(\'' + item.id + '\', 0, -1)">−</button><span>' + item.qty + '</span><button onclick="changeCartQty(\'' + item.id + '\', 0, 1)">+</button></div>';
+        html += '<span class="cart-item-line">₪' + (item.price * item.qty) + '</span></div></div>';
+        html += '<button class="cart-item-remove" aria-label="حذف" onclick="removeFromCart(\'' + item.id + '\', 0)">✕</button>';
         html += '</div>';
     });
 
@@ -1530,15 +1531,15 @@ function renderCartItems() {
         var product = products.find(function(p) { return String(p.id) === String(item.id); });
         if (!product) return;
         var sizeData = product.sizes[item.sizeIdx] || product.sizes[0];
+        var lineTotal = Math.round(item.price * item.qty);
         html += '<div class="cart-item">';
-        html += '<img src="' + product.image + '" alt="' + product.name + '" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">';
-        html += '<div class="cart-item-info"><h4>' + product.name + '</h4>';
-        if (sizeData && sizeData.size !== '-') html += '<span class="cart-item-size">' + sizeData.size + (sizeData.unit || '') + '</span>';
-        html += '<span class="cart-item-price">₪' + item.price + '</span></div>';
-        html += '<div class="cart-item-qty"><button onclick="changeCartQty(\'' + item.id + '\', ' + item.sizeIdx + ', -1)">−</button>';
-        html += '<span>' + item.qty + '</span>';
-        html += '<button onclick="changeCartQty(\'' + item.id + '\', ' + item.sizeIdx + ', 1)">+</button></div>';
-        html += '<button class="cart-item-remove" onclick="removeFromCart(\'' + item.id + '\', ' + item.sizeIdx + ')">✕</button>';
+        html += '<div class="cart-item-thumb"><img src="' + product.image + '" alt="' + product.name + '" onerror="this.src=\'' + FALLBACK_IMAGE + '\'"></div>';
+        html += '<div class="cart-item-main"><h4>' + product.name + '</h4>';
+        if (sizeData && sizeData.size !== '-') html += '<span class="cart-item-chip">' + sizeData.size + (sizeData.unit || '') + '</span>';
+        html += '<span class="cart-item-unit">₪' + Math.round(item.price) + ' / للقطعة</span>';
+        html += '<div class="cart-item-row"><div class="cart-qty"><button onclick="changeCartQty(\'' + item.id + '\', ' + item.sizeIdx + ', -1)" aria-label="تقليل">−</button><span>' + item.qty + '</span><button onclick="changeCartQty(\'' + item.id + '\', ' + item.sizeIdx + ', 1)" aria-label="زيادة">+</button></div>';
+        html += '<span class="cart-item-line">₪' + lineTotal + '</span></div></div>';
+        html += '<button class="cart-item-remove" aria-label="حذف" onclick="removeFromCart(\'' + item.id + '\', ' + item.sizeIdx + ')">✕</button>';
         html += '</div>';
     });
 
