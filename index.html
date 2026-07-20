@@ -43,6 +43,10 @@
                 <li><a href="#contact">تواصلي معنا</a></li>
                 <li><a href="#order-tracking">تتبّع الطلب</a></li>
             </ul>
+            <button class="account-icon" id="accountIcon" onclick="openAccount()" aria-label="حسابي">
+                <span class="account-icon-glyph">👤</span>
+                <span class="account-icon-label" id="accountIconLabel">حسابي</span>
+            </button>
             <div class="cart-icon" id="cartIcon" onclick="toggleCart()">
                 🛒
                 <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
@@ -56,6 +60,8 @@
         <a href="#delivery" onclick="toggleMobileMenu()">التوصيل</a>
         <a href="#contact" onclick="toggleMobileMenu()">تواصلي معنا</a>
         <a href="#order-tracking" onclick="toggleMobileMenu()">تتبّع الطلب</a>
+        <a href="#" onclick="toggleMobileMenu();openAccount();return false;">حسابي</a>
+        <a href="#" onclick="toggleMobileMenu();openSupport();return false;">الدعم والمساعدة</a>
     </div>
 
     <section class="hero" id="heroSection">
@@ -92,6 +98,23 @@
         </div>
     </section>
 
+    <!-- Dynamic curated home sections (admin-configurable) -->
+    <section class="home-sections" id="homeSections" aria-label="أقسام المتجر">
+        <div class="container">
+            <div class="home-sections-skeleton" id="homeSectionsSkeleton">
+                <div class="sk-rail"><div class="sk-head"></div><div class="sk-cards"><span></span><span></span><span></span><span></span></div></div>
+                <div class="sk-rail"><div class="sk-head"></div><div class="sk-cards"><span></span><span></span><span></span><span></span></div></div>
+            </div>
+        </div>
+    </section>
+
+    <div class="browse-toggle-wrap container">
+        <button type="button" class="browse-all-btn" id="browseAllBtn" onclick="toggleBrowseAll()">
+            تصفّحي كل المنتجات <span class="browse-all-caret" id="browseAllCaret">▾</span>
+        </button>
+    </div>
+
+    <div id="browseAllWrap" class="browse-all-wrap" hidden>
     <section id="products" class="filter-section">
         <div class="container">
             <p class="store-notice" id="storeNotice" style="display:none;"></p>
@@ -124,6 +147,7 @@
             <div class="products-grid" id="productsGrid"></div>
         </div>
     </section>
+    </div><!-- /browse-all-wrap -->
 
     <section id="about" class="about-section" style="display:none;">
         <div class="container">
@@ -273,6 +297,28 @@
         </div>
     </div>
 
+    <!-- Floating support button -->
+    <button class="support-fab" id="supportFab" onclick="openSupport()" aria-label="الدعم والمساعدة">
+        <span class="support-fab-icon">💬</span>
+        <span class="support-fab-text">مساعدة</span>
+    </button>
+
+    <!-- Auth / Account modal -->
+    <div class="modal-overlay account-overlay" id="accountModal" style="display:none;" onclick="closeAccount(event)">
+        <div class="account-modal" onclick="event.stopPropagation()">
+            <button class="pdp-close" onclick="closeAccount()" aria-label="إغلاق">✕</button>
+            <div id="accountModalBody"><!-- filled by account.js --></div>
+        </div>
+    </div>
+
+    <!-- Support ticket modal -->
+    <div class="modal-overlay account-overlay" id="supportModal" style="display:none;" onclick="closeSupport(event)">
+        <div class="account-modal support-modal" onclick="event.stopPropagation()">
+            <button class="pdp-close" onclick="closeSupport()" aria-label="إغلاق">✕</button>
+            <div id="supportModalBody"><!-- filled by account.js --></div>
+        </div>
+    </div>
+
     <div id="flyingProduct" class="flying-product" style="display:none;"></div>
 
     <footer class="footer">
@@ -285,7 +331,10 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
     <script src="data.js"></script>
+    <script src="shared.js"></script>
     <script src="script.js"></script>
+    <script src="account.js"></script>
+    <script src="sections.js"></script>
 </body>
 </html>
 <!-- deploy trigger -->

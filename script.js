@@ -208,6 +208,7 @@ function renderStorefront() {
     renderProducts(getFilteredProducts(currentFilter));
     updateCheckoutLink(updateCartTotal());
     renderComboOffersSection();
+    if (window.shRenderSections) window.shRenderSections();
     if (!usedFallbackData) setStoreMessage('', 'info');
 }
 
