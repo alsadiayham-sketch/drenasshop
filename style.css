@@ -2487,3 +2487,14 @@ body.has-combo-banner .mobile-menu { top: calc(62px + 36px); }
     .sk-rail .sk-head, .sk-cards span { animation: none !important; }
 }
 
+
+/* ---- Checkout loyalty redeem widget ---- */
+.loyalty-redeem { display: flex; align-items: center; gap: 12px; margin: 14px 0 6px; padding: 12px 14px; border: 2px solid var(--primary, #B7E1EF); border-radius: 14px; background: #f6fcfe; cursor: pointer; transition: background 0.2s, border-color 0.2s; }
+.loyalty-redeem:hover { background: #eef8fc; }
+.loyalty-redeem.on { border-color: var(--brand-accent, #1B7A97); background: #eaf7fc; }
+.loyalty-redeem .lr-check { flex: 0 0 22px; width: 22px; height: 22px; border-radius: 7px; border: 2px solid var(--brand-accent, #1B7A97); display: flex; align-items: center; justify-content: center; color: var(--brand-accent, #1B7A97); font-weight: 800; font-size: 0.9rem; }
+.loyalty-redeem.on .lr-check { background: var(--brand-accent, #1B7A97); color: #fff; }
+.loyalty-redeem .lr-info { display: flex; flex-direction: column; gap: 2px; }
+.loyalty-redeem .lr-info strong { color: var(--ink, #0E3A47); font-size: 0.92rem; }
+.loyalty-redeem .lr-info span { color: #5b7683; font-size: 0.8rem; }
+.summary-row.discount span:last-child { color: #166534; font-weight: 700; }

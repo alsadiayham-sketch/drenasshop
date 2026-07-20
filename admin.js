@@ -12,6 +12,7 @@ var charts = {};
 var isInitializing = false;
 var previousOrderCount = -1;
 var notificationSound = null;
+var currentAdmin = null;
 
 var adminReady = {
     products: false,
@@ -62,6 +63,8 @@ function checkNewOrderNotification(snapshot) {
 
 document.addEventListener('DOMContentLoaded', function () {
     if (sessionStorage.getItem('drenasshop_admin') === 'true') {
+        try { currentAdmin = JSON.parse(sessionStorage.getItem('drenasshop_admin_user') || 'null'); } catch (e) { currentAdmin = null; }
+        if (!currentAdmin) currentAdmin = { owner: true, role: 'owner', name: 'إيناس', permissions: {} };
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'block';
         initializeAdmin();
@@ -95,20 +98,48 @@ function setAdminStatus(message, type) {
 
 function handleLogin(event) {
     event.preventDefault();
-    var user = document.getElementById('loginUser').value;
+    var user = document.getElementById('loginUser').value.trim();
     var pass = document.getElementById('loginPass').value;
+    var errEl = document.getElementById('loginError');
+    errEl.textContent = '';
+
+    // Owner (super admin)
     if (user === ADMIN_USER && pass === ADMIN_PASS) {
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('adminPanel').style.display = 'block';
-        sessionStorage.setItem('drenasshop_admin', 'true');
-        initializeAdmin();
-    } else {
-        document.getElementById('loginError').textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
+        currentAdmin = { owner: true, role: 'owner', name: 'إيناس', username: ADMIN_USER, permissions: {} };
+        finishLogin();
+        return;
     }
+    // Worker accounts (Firestore, hashed)
+    if (!window.db) { errEl.textContent = 'تعذر الاتصال بقاعدة البيانات'; return; }
+    var btn = event.target.querySelector('button[type=submit]');
+    if (btn) { btn.disabled = true; btn.textContent = 'جاري التحقق...'; }
+    db.collection('workers').where('username', '==', user.toLowerCase()).limit(1).get().then(function (snap) {
+        if (snap.empty) throw new Error('اسم المستخدم أو كلمة المرور غير صحيحة');
+        var docSnap = snap.docs[0];
+        var w = docSnap.data(); w.id = docSnap.id;
+        if (w.active === false) throw new Error('هذا الحساب معطّل. تواصلي مع المدير');
+        return window.shHashPassword(pass, w.salt).then(function (hash) {
+            if (hash !== w.passHash) throw new Error('اسم المستخدم أو كلمة المرور غير صحيحة');
+            currentAdmin = { owner: false, id: w.id, role: w.role, name: w.name, username: w.username, permissions: w.permissions || {} };
+            finishLogin();
+        });
+    }).catch(function (err) {
+        errEl.textContent = err.message || 'تعذر تسجيل الدخول';
+        if (btn) { btn.disabled = false; btn.textContent = 'دخول'; }
+    });
+}
+
+function finishLogin() {
+    sessionStorage.setItem('drenasshop_admin', 'true');
+    sessionStorage.setItem('drenasshop_admin_user', JSON.stringify(currentAdmin));
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    initializeAdmin();
 }
 
 function logout() {
     sessionStorage.removeItem('drenasshop_admin');
+    sessionStorage.removeItem('drenasshop_admin_user');
     unsubscribers.forEach(function (unsubscribe) { if (typeof unsubscribe === 'function') unsubscribe(); });
     location.reload();
 }
@@ -120,6 +151,11 @@ function switchTab(tab, button) {
     if (button) button.classList.add('active');
     if (tab === 'dashboard') renderDashboard();
     if (tab === 'orders') renderOrdersTable();
+    if (tab === 'sections' && window.renderSectionsList) window.renderSectionsList();
+    if (tab === 'customers' && window.renderCustomersTable) window.renderCustomersTable();
+    if (tab === 'tickets' && window.renderTicketsList) window.renderTicketsList();
+    if (tab === 'loyalty' && window.loadLoyaltyForm) window.loadLoyaltyForm();
+    if (tab === 'workers' && window.renderWorkersTable) window.renderWorkersTable();
 }
 
 async function initializeAdmin() {
@@ -143,6 +179,8 @@ async function initializeAdmin() {
     try {
         await ensureSeedIfEmpty();
         subscribeToCollections();
+        if (window.initAdminExt) window.initAdminExt();
+        if (window.applyPermissionGating) window.applyPermissionGating();
     } catch (error) {
         console.error(error);
         setAdminStatus('حدث خطأ أثناء تحميل البيانات.', 'error');
@@ -601,6 +639,9 @@ function toggleOrderDetails(orderId) {
 async function updateOrderStatus(orderId, status) {
     setAdminLoading(true);
     await db.collection('orders').doc(String(orderId)).update({ status: status });
+    if (status === 'completed' && window.awardLoyaltyForOrder) {
+        try { await window.awardLoyaltyForOrder(String(orderId)); } catch (e) { console.error('loyalty award', e); }
+    }
     setAdminLoading(false);
     setAdminStatus('تم تحديث حالة الطلب.', 'success');
 }

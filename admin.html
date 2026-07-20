@@ -26,13 +26,19 @@
             <div class="admin-nav-content">
                 <h2>لوحة التحكم</h2>
                 <div class="admin-tabs">
-                    <button class="tab-btn active" onclick="switchTab('dashboard', this)">لوحة المعلومات</button>
-                    <button class="tab-btn" onclick="switchTab('products', this)">المنتجات</button>
-                    <button class="tab-btn" onclick="switchTab('offers', this)">العروض</button>
-                    <button class="tab-btn" onclick="switchTab('hero', this)">العرض الرئيسي</button>
-                    <button class="tab-btn" onclick="switchTab('orders', this)" id="ordersTabBtn">الطلبات<span class="order-badge" id="orderBadge" style="display:none;"></span></button>
-                    <button class="tab-btn" onclick="switchTab('settings', this)">الإعدادات</button>
+                    <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard', this)">لوحة المعلومات</button>
+                    <button class="tab-btn" data-tab="products" onclick="switchTab('products', this)">المنتجات</button>
+                    <button class="tab-btn" data-tab="sections" onclick="switchTab('sections', this)">الأقسام</button>
+                    <button class="tab-btn" data-tab="offers" onclick="switchTab('offers', this)">العروض</button>
+                    <button class="tab-btn" data-tab="hero" onclick="switchTab('hero', this)">العرض الرئيسي</button>
+                    <button class="tab-btn" data-tab="orders" onclick="switchTab('orders', this)" id="ordersTabBtn">الطلبات<span class="order-badge" id="orderBadge" style="display:none;"></span></button>
+                    <button class="tab-btn" data-tab="customers" onclick="switchTab('customers', this)">العملاء</button>
+                    <button class="tab-btn" data-tab="tickets" onclick="switchTab('tickets', this)" id="ticketsTabBtn">الدعم<span class="order-badge" id="ticketBadge" style="display:none;"></span></button>
+                    <button class="tab-btn" data-tab="loyalty" onclick="switchTab('loyalty', this)">نقاط الولاء</button>
+                    <button class="tab-btn" data-tab="workers" onclick="switchTab('workers', this)">الموظفين</button>
+                    <button class="tab-btn" data-tab="settings" onclick="switchTab('settings', this)">الإعدادات</button>
                 </div>
+                <div class="admin-userchip" id="adminUserChip"></div>
                 <button class="logout-btn" onclick="logout()">خروج</button>
             </div>
         </nav>
@@ -153,6 +159,73 @@
                 <div class="form-group"><label>رابط TikTok</label><input type="url" id="settingTiktok" placeholder="https://tiktok.com/..."></div>
                 <button type="submit" class="btn-save">حفظ الإعدادات</button>
             </form>
+        </div>
+
+        <!-- SECTIONS TAB -->
+        <div class="tab-content" id="tab-sections">
+            <div class="tab-header">
+                <h3>أقسام الصفحة الرئيسية</h3>
+                <div class="header-actions"><button class="btn-add" onclick="openSectionModal()">إضافة قسم</button></div>
+            </div>
+            <p class="tab-hint">رتّبي كيف تظهر منتجاتك في الصفحة الرئيسية عبر أقسام مخصّصة (شريط، واجهة مميزة، شبكة). اسحبي بالترتيب عبر الأسهم.</p>
+            <div id="sectionsList" class="sections-admin-list"></div>
+        </div>
+
+        <!-- CUSTOMERS TAB -->
+        <div class="tab-content" id="tab-customers">
+            <div class="tab-header"><h3>العملاء</h3></div>
+            <div class="customers-toolbar">
+                <input type="text" id="customerSearch" placeholder="ابحثي بالاسم أو الهاتف..." oninput="renderCustomersTable()">
+                <div class="customers-stat" id="customersStat"></div>
+            </div>
+            <div class="table-wrap"><table class="admin-table"><thead><tr>
+                <th>الاسم</th><th>الهاتف</th><th>النقاط</th><th>المستوى</th><th>الطلبات</th><th>الحالة</th><th>إجراءات</th>
+            </tr></thead><tbody id="customersTableBody"></tbody></table></div>
+        </div>
+
+        <!-- TICKETS TAB -->
+        <div class="tab-content" id="tab-tickets">
+            <div class="tab-header"><h3>تذاكر الدعم</h3></div>
+            <div class="tickets-filter" id="ticketsFilter">
+                <button class="chip active" data-tf="open" onclick="filterTickets('open',this)">المفتوحة</button>
+                <button class="chip" data-tf="all" onclick="filterTickets('all',this)">الكل</button>
+                <button class="chip" data-tf="closed" onclick="filterTickets('closed',this)">المغلقة</button>
+            </div>
+            <div class="tickets-layout">
+                <div class="tickets-list" id="ticketsList"></div>
+                <div class="ticket-detail" id="ticketDetail"><div class="ticket-empty">اختاري تذكرة لعرضها</div></div>
+            </div>
+        </div>
+
+        <!-- LOYALTY TAB -->
+        <div class="tab-content" id="tab-loyalty">
+            <div class="tab-header"><h3>إعدادات نقاط الولاء</h3></div>
+            <form class="settings-form loyalty-form" onsubmit="event.preventDefault(); saveLoyaltyConfig()">
+                <div class="form-group checkbox-field"><input type="checkbox" id="loyEnabled"><label for="loyEnabled">تفعيل نظام نقاط الولاء</label></div>
+                <div class="form-row">
+                    <div class="form-group"><label>نقاط لكل 1 ₪ إنفاق</label><input type="number" id="loyEarnRate" step="0.1" min="0" value="1"></div>
+                    <div class="form-group"><label>قيمة النقطة عند الاستبدال (₪)</label><input type="number" id="loyRedeemValue" step="0.01" min="0" value="0.1"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>أقل عدد نقاط للاستبدال</label><input type="number" id="loyMinRedeem" min="0" value="100"></div>
+                    <div class="form-group"><label>أقصى نسبة دفع بالنقاط (%)</label><input type="number" id="loyMaxPercent" min="0" max="100" value="30"></div>
+                </div>
+                <div class="form-group"><label>مكافأة التسجيل (نقاط)</label><input type="number" id="loySignupBonus" min="0" value="50"></div>
+                <div class="form-group"><label>المستويات (Tiers)</label><div id="loyTiersEditor" class="tiers-editor"></div><button type="button" class="btn-add-size" onclick="addTierRow()">+ إضافة مستوى</button></div>
+                <button type="submit" class="btn-save">حفظ إعدادات الولاء</button>
+            </form>
+        </div>
+
+        <!-- WORKERS TAB -->
+        <div class="tab-content" id="tab-workers">
+            <div class="tab-header">
+                <h3>الموظفين والصلاحيات</h3>
+                <div class="header-actions"><button class="btn-add" onclick="openWorkerModal()">إضافة موظف</button></div>
+            </div>
+            <p class="tab-hint">أنشئي حسابات لفريقك واختاري دوراً جاهزاً ثم عدّلي الصلاحيات لكل قسم (لا شيء / عرض / تعديل).</p>
+            <div class="table-wrap"><table class="admin-table"><thead><tr>
+                <th>الاسم</th><th>اسم المستخدم</th><th>الدور</th><th>الحالة</th><th>إجراءات</th>
+            </tr></thead><tbody id="workersTableBody"></tbody></table></div>
         </div>
     </div>
 
@@ -293,12 +366,84 @@
         </div>
     </div>
 
+    <!-- Section Modal -->
+    <div class="modal-overlay" id="sectionModal" style="display:none;">
+        <div class="modal">
+            <h3 id="sectionModalTitle">إضافة قسم</h3>
+            <form onsubmit="event.preventDefault(); saveSection()">
+                <input type="hidden" id="sectionId">
+                <div class="form-row">
+                    <div class="form-group"><label>عنوان القسم</label><input type="text" id="sectionTitle" placeholder="مثال: الأكثر مبيعاً" required></div>
+                    <div class="form-group"><label>وصف مختصر</label><input type="text" id="sectionSubtitle" placeholder="اختياري"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>نوع العرض (Layout)</label><select id="sectionLayout">
+                        <option value="rail">شريط أفقي</option><option value="spotlight">واجهة مميزة</option><option value="grid">شبكة</option>
+                    </select></div>
+                    <div class="form-group"><label>طريقة اختيار المنتجات</label><select id="sectionType" onchange="onSectionTypeChange()">
+                        <option value="manual">اختيار يدوي</option><option value="category">حسب الفئة</option><option value="brand">حسب الماركة</option><option value="status">حسب الحالة</option><option value="new">وصل حديثاً</option>
+                    </select></div>
+                </div>
+                <div class="form-group" id="sectionValueGroup" style="display:none;"><label>القيمة</label><select id="sectionValue"></select></div>
+                <div class="form-group" id="sectionManualGroup"><label>اختاري المنتجات</label>
+                    <div class="offer-products-search"><input type="text" id="sectionProductSearch" placeholder="ابحثي عن منتج..." oninput="filterSectionProducts()"></div>
+                    <div class="offer-products-grid" id="sectionProductsGrid"></div>
+                    <small class="muted"><span id="sectionSelectedCount">0</span> منتج مختار</small>
+                </div>
+                <div class="form-group" id="sectionCoverGroup"><label>صورة الغلاف (للواجهة المميزة)</label>
+                    <div class="image-upload-group">
+                        <input type="file" id="sectionCoverFile" accept="image/*">
+                        <span class="upload-or">أو</span>
+                        <input type="url" id="sectionCover" placeholder="رابط الصورة https://...">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>الحد الأقصى للمنتجات</label><input type="number" id="sectionLimit" value="12" min="2" max="30"></div>
+                    <div class="form-group checkbox-field" style="align-self:end;"><input type="checkbox" id="sectionVisible" checked><label for="sectionVisible">ظاهر في المتجر</label></div>
+                </div>
+                <div class="modal-actions"><button type="submit" class="btn-save">حفظ القسم</button><button type="button" class="btn-cancel" onclick="closeModal('sectionModal')">إلغاء</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Worker Modal -->
+    <div class="modal-overlay" id="workerModal" style="display:none;">
+        <div class="modal">
+            <h3 id="workerModalTitle">إضافة موظف</h3>
+            <form onsubmit="event.preventDefault(); saveWorker()">
+                <input type="hidden" id="workerId">
+                <div class="form-row">
+                    <div class="form-group"><label>الاسم</label><input type="text" id="workerName" required></div>
+                    <div class="form-group"><label>اسم المستخدم</label><input type="text" id="workerUsername" required autocomplete="off"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>كلمة المرور <small class="muted" id="workerPassHint"></small></label><input type="password" id="workerPassword" autocomplete="new-password"></div>
+                    <div class="form-group"><label>الدور (قالب جاهز)</label><select id="workerRole" onchange="applyRolePreset()"><option value="">مخصّص</option></select></div>
+                </div>
+                <div class="form-group"><label>الصلاحيات لكل قسم</label><div id="workerPermsGrid" class="perms-grid"></div></div>
+                <div class="form-group checkbox-field"><input type="checkbox" id="workerActive" checked><label for="workerActive">الحساب مفعّل</label></div>
+                <div class="modal-actions"><button type="submit" class="btn-save">حفظ الموظف</button><button type="button" class="btn-cancel" onclick="closeModal('workerModal')">إلغاء</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Customer Modal -->
+    <div class="modal-overlay" id="customerModal" style="display:none;">
+        <div class="modal small-modal">
+            <h3 id="customerModalTitle">تفاصيل العميل</h3>
+            <div id="customerModalBody"></div>
+            <div class="modal-actions"><button type="button" class="btn-cancel" onclick="closeModal('customerModal')">إغلاق</button></div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
     <script src="data.js"></script>
+    <script src="shared.js"></script>
     <script src="seed-data.js"></script>
     <script src="admin.js"></script>
+    <script src="admin-ext.js"></script>
 </body>
 </html>

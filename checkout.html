@@ -97,6 +97,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
     <script src="data.js"></script>
+    <script src="shared.js"></script>
     <script>
         var FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 rx=%2216%22 fill=%22%23fdf8e8%22/%3E%3Ctext x=%2250%22 y=%2257%22 text-anchor=%22middle%22 font-size=%2218%22 fill=%22%23d4af37%22%3EIMG%3C/text%3E%3C/svg%3E";
         var products = normalizeProducts(DEFAULT_PRODUCTS);
@@ -109,6 +110,11 @@
         var comboSelectedIds = [];
         var currentComboOffer = null;
 
+        // Loyalty redemption state
+        var loyaltyCfg = null;
+        var currentCust = null;
+        var useLoyaltyRedeem = false;
+
         var DELIVERY_COSTS = { westbank: 20, jerusalem: 30, inside: 50 };
         var DELIVERY_LABELS = { westbank: 'الضفة', jerusalem: 'القدس', inside: 'الداخل' };
 
@@ -119,6 +125,22 @@
             saveCart();
             render();
             setStatus('');
+
+            // Loyalty: load logged-in customer + program config, then re-render summary
+            if (window.getCurrentCustomer) currentCust = window.getCurrentCustomer();
+            if (window.shGetLoyaltyConfig) {
+                window.shGetLoyaltyConfig().then(function (cfg) {
+                    loyaltyCfg = cfg;
+                    if (window.shRefreshCustomer && currentCust) {
+                        window.shRefreshCustomer(currentCust.id).then(function (fresh) {
+                            if (fresh) currentCust = fresh;
+                            render();
+                        }).catch(function () { render(); });
+                    } else {
+                        render();
+                    }
+                }).catch(function () {});
+            }
 
             if (window.db) {
                 var fetchDone = false;
@@ -277,7 +299,18 @@
             html += '<div class="summary-row"><span class="label">عدد المنتجات:</span><span>' + itemCount + ' قطعة</span></div>';
             html += '<div class="summary-row"><span class="label">المجموع الفرعي:</span><span>' + getTotalDisplayText(subtotal, hasPending) + '</span></div>';
             html += '<div class="summary-row"><span class="label">التوصيل:</span><span>' + getDeliveryCostLabel() + '</span></div>';
-            html += '<div class="summary-row total"><span>المجموع:</span><span>' + getTotalDisplayText(getTotal(), hasPending) + '</span></div>';
+            if (loyaltyActive()) {
+                var rp = maxRedeemablePoints();
+                var rv = formatCurrency(rp * (loyaltyCfg.redeemValue || 0.1));
+                html += '<div class="loyalty-redeem ' + (useLoyaltyRedeem ? 'on' : '') + '" onclick="toggleLoyaltyRedeem()">';
+                html += '<div class="lr-check">' + (useLoyaltyRedeem ? '✓' : '') + '</div>';
+                html += '<div class="lr-info"><strong>استبدال نقاط الولاء</strong><span>لديكِ ' + (currentCust.points || 0) + ' نقطة — استبدلي ' + rp + ' نقطة بخصم ' + rv + '</span></div>';
+                html += '</div>';
+                if (useLoyaltyRedeem && loyaltyDiscount() > 0) {
+                    html += '<div class="summary-row discount"><span class="label">خصم النقاط:</span><span>− ' + formatCurrency(loyaltyDiscount()) + '</span></div>';
+                }
+            }
+            html += '<div class="summary-row total"><span>المجموع:</span><span>' + getTotalDisplayText(getPayableTotal(), hasPending) + '</span></div>';
             html += '<button type="button" class="btn-whatsapp-order" id="confirmOrderBtn" onclick="confirmOrder()">حفظ الطلب</button>';
             html += '</div></div></div></div>';
             container.innerHTML = html;
@@ -346,8 +379,8 @@
             var phone = document.getElementById('custPhone');
             var address = document.getElementById('custAddress');
             var notes = document.getElementById('custNotes');
-            if (name) name.value = data.name || '';
-            if (phone) phone.value = data.phone || '';
+            if (name) name.value = data.name || (currentCust && currentCust.name) || '';
+            if (phone) phone.value = data.phone || (currentCust && currentCust.phone) || '';
             if (address) address.value = data.address || '';
             if (notes) notes.value = data.notes || '';
         }
@@ -379,6 +412,35 @@
             return getSubtotal() + getDeliveryCost();
         }
 
+        // ---- Loyalty redemption helpers ----
+        function loyaltyActive() {
+            return !!(currentCust && loyaltyCfg && loyaltyCfg.enabled &&
+                (currentCust.points || 0) >= (loyaltyCfg.minRedeem || 0) &&
+                !hasCustomPricingPending(cart));
+        }
+        // Max points redeemable on this order (respects balance, minRedeem, maxRedeemPercent)
+        function maxRedeemablePoints() {
+            if (!loyaltyActive()) return 0;
+            var goods = getSubtotal();
+            if (goods <= 0) return 0;
+            var val = loyaltyCfg.redeemValue || 0.1;
+            var cap = Math.floor((goods * (loyaltyCfg.maxRedeemPercent || 30) / 100) / val);
+            var pts = Math.min(currentCust.points || 0, cap);
+            if (pts < (loyaltyCfg.minRedeem || 0)) return 0;
+            return pts;
+        }
+        function loyaltyDiscount() {
+            if (!useLoyaltyRedeem) return 0;
+            return maxRedeemablePoints() * (loyaltyCfg.redeemValue || 0.1);
+        }
+        function getPayableTotal() {
+            return Math.max(0, getTotal() - loyaltyDiscount());
+        }
+        function toggleLoyaltyRedeem() {
+            useLoyaltyRedeem = !useLoyaltyRedeem;
+            render();
+        }
+
         function buildOrder() {
             var customerName = document.getElementById('custName').value.trim();
             var customerPhone = document.getElementById('custPhone').value.trim();
@@ -389,6 +451,9 @@
             var total = subtotal + deliveryCost;
             var pricingPending = hasCustomPricingPending(cart);
             var id = makeOrderId();
+            var redeemPts = (useLoyaltyRedeem && loyaltyActive()) ? maxRedeemablePoints() : 0;
+            var pointsDiscount = redeemPts * ((loyaltyCfg && loyaltyCfg.redeemValue) || 0.1);
+            var payable = Math.max(0, total - pointsDiscount);
             return {
                 id: id,
                 items: cart.map(function (item) {
@@ -456,8 +521,12 @@
                 region: selectedDelivery === 'delivery' ? selectedRegion : 'pickup',
                 deliveryCost: deliveryCost,
                 subtotal: subtotal,
-                total: total,
-                totalDisplay: getTotalDisplayText(total, pricingPending),
+                total: payable,
+                grossTotal: total,
+                customerId: (currentCust && currentCust.id) || null,
+                pointsRedeemed: redeemPts,
+                pointsDiscount: pointsDiscount,
+                totalDisplay: getTotalDisplayText(payable, pricingPending),
                 pricingPending: pricingPending,
                 date: new Date().toISOString(),
                 status: 'new'
@@ -540,6 +609,11 @@
                 localStorage.setItem('drenasshop_last_order', JSON.stringify(order));
                 localStorage.setItem('drenasshop_cart', '[]');
                 cart = [];
+                if (order.pointsRedeemed > 0 && order.customerId && window.shApplyPoints) {
+                    window.shApplyPoints(order.customerId, -order.pointsRedeemed, 'redeem', { orderId: order.id })
+                        .then(function () { if (window.shRefreshCustomer) window.shRefreshCustomer(order.customerId); })
+                        .catch(function (e) { console.error('redeem failed', e); });
+                }
                 showOrderSuccess(order);
             }).catch(function (error) {
                 console.error(error);
