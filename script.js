@@ -205,11 +205,100 @@ function renderStorefront() {
     checkDiscountBanner();
     renderComboBanner();
     updateCartBadge();
-    renderProducts(getFilteredProducts(currentFilter));
+    if (window.__COLLECTION__) {
+        renderCollection();
+    } else {
+        renderProducts(getFilteredProducts(currentFilter));
+        renderComboOffersSection();
+        if (window.shRenderSections) window.shRenderSections();
+    }
     updateCheckoutLink(updateCartTotal());
-    renderComboOffersSection();
-    if (window.shRenderSections) window.shRenderSections();
     if (!usedFallbackData) setStoreMessage('', 'info');
+}
+
+// ---- Dedicated collection / category page (collection.html) ----
+var COLLECTION_SORT = 'featured';
+function getCollectionParams() {
+    var p = new URLSearchParams(window.location.search);
+    return {
+        type: p.get('type') || 'all',
+        value: p.get('value') || '',
+        id: p.get('id') || '',
+        title: p.get('title') || ''
+    };
+}
+
+function renderCollection() {
+    var params = getCollectionParams();
+    var titleEl = document.getElementById('collectionTitle');
+    var subEl = document.getElementById('collectionSub');
+    var countEl = document.getElementById('collectionCount');
+    var crumbEl = document.getElementById('collectionCrumb');
+
+    // type=section → load a manual admin section by id, then resolve its products
+    if (params.type === 'section' && params.id && window.db && !renderCollection._sectionLoaded) {
+        renderCollection._sectionLoaded = true;
+        window.db.collection('sections').doc(params.id).get().then(function (snap) {
+            renderCollection._section = snap.exists ? snap.data() : null;
+            renderCollection();
+        }).catch(function () { renderCollection._section = null; renderCollection(); });
+        return;
+    }
+
+    var list = resolveCollectionProducts(params);
+    list = sortCollection(list, COLLECTION_SORT);
+
+    var heading = params.title || collectionDefaultTitle(params);
+    if (titleEl) titleEl.textContent = heading;
+    if (crumbEl) crumbEl.textContent = heading;
+    if (subEl) subEl.textContent = list.length ? ('تشكيلة منتقاة بعناية — ' + list.length + ' منتج') : 'لا توجد منتجات في هذه التشكيلة حالياً';
+    if (countEl) countEl.textContent = list.length + ' منتج';
+    document.title = heading + ' | إيناس شوب';
+
+    renderProducts(list);
+}
+
+function resolveCollectionProducts(params) {
+    var t = params.type;
+    if (t === 'category') return products.filter(function (p) { return p.category === params.value; });
+    if (t === 'brand') return products.filter(function (p) { return p.brand === params.value; });
+    if (t === 'status') return products.filter(function (p) { return p.status === params.value; });
+    if (t === 'new') return products.slice().sort(function (a, b) { return (b.id || 0) - (a.id || 0); });
+    if (t === 'section') {
+        var s = renderCollection._section;
+        if (!s) return [];
+        if ((s.type || 'manual') === 'manual') {
+            var ids = (s.productIds || []).map(String);
+            return ids.map(function (id) { return products.filter(function (p) { return String(p.id) === id; })[0]; }).filter(Boolean);
+        }
+        return resolveCollectionProducts({ type: s.type, value: s.value });
+    }
+    return products.slice();
+}
+
+function collectionDefaultTitle(params) {
+    if (params.value) return params.value;
+    if (params.type === 'new') return 'وصل حديثاً';
+    return 'كل المنتجات';
+}
+
+function sortCollection(list, mode) {
+    var out = list.slice();
+    if (mode === 'price-asc' || mode === 'price-desc') {
+        out.sort(function (a, b) {
+            var pa = getFinalPrice(a, 0, discounts).final;
+            var pb = getFinalPrice(b, 0, discounts).final;
+            return mode === 'price-asc' ? pa - pb : pb - pa;
+        });
+    } else if (mode === 'newest') {
+        out.sort(function (a, b) { return (b.id || 0) - (a.id || 0); });
+    }
+    return out;
+}
+
+function setCollectionSort(mode) {
+    COLLECTION_SORT = mode;
+    renderCollection();
 }
 
 function applySettings() {
@@ -289,6 +378,16 @@ function renderProducts(productsToShow) {
 
     if (!productsToShow.length) {
         grid.innerHTML = '<div class="empty-products">لا توجد منتجات متاحة حالياً.</div>';
+        return;
+    }
+
+    // On pages that provide the premium card + sec-grid styling, use it for a
+    // richer, consistent look (collection page opts in via .sec-grid class).
+    if (typeof window.shProductCard === 'function' && grid.classList.contains('sec-grid')) {
+        var html = '';
+        productsToShow.forEach(function (product) { html += window.shProductCard(product, 'grid'); });
+        grid.innerHTML = html;
+        if (window.shSyncWishHearts) window.shSyncWishHearts();
         return;
     }
 

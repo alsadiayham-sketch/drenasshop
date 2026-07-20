@@ -41,6 +41,9 @@
         var container = document.createElement('div');
         container.className = 'container';
 
+        var chips = buildCategoryChips(products);
+        if (chips) container.appendChild(chips);
+
         var rendered = 0;
         defs.forEach(function (section, i) {
             var items = resolveProducts(section, products);
@@ -61,6 +64,20 @@
         host.appendChild(container);
         observeReveal(host);
         if (window.shSyncWishHearts) window.shSyncWishHearts();
+    }
+
+    function buildCategoryChips(products) {
+        var cats = [];
+        products.forEach(function (p) { if (p.category && cats.indexOf(p.category) < 0) cats.push(p.category); });
+        if (cats.length < 2) return null;
+        var wrap = document.createElement('div');
+        wrap.className = 'cat-chips reveal';
+        var html = '<a class="cat-chip cat-chip-all" href="collection.html?type=all&title=' + encodeURIComponent('كل المنتجات') + '">كل المنتجات</a>';
+        cats.slice(0, 10).forEach(function (c) {
+            html += '<a class="cat-chip" href="collection.html?type=category&value=' + encodeURIComponent(c) + '&title=' + encodeURIComponent(c) + '">' + esc(c) + '</a>';
+        });
+        wrap.innerHTML = html;
+        return wrap;
     }
 
     function buildDefaults(products) {
@@ -100,36 +117,52 @@
         return out.slice(0, limit);
     }
 
-    function sectionHeader(section, viewAllAttr) {
+    function sectionHeader(section, href) {
         return '<div class="home-sec-head reveal">' +
             '<div><h2 class="home-sec-title">' + esc(section.title) + '</h2>' +
             (section.subtitle ? '<p class="home-sec-sub">' + esc(section.subtitle) + '</p>' : '') + '</div>' +
-            (viewAllAttr ? '<button type="button" class="home-sec-viewall" ' + viewAllAttr + '>عرض الكل ‹</button>' : '') +
+            (href ? '<a class="home-sec-viewall" href="' + href + '">عرض الكل <span class="va-arrow">‹</span></a>' : '') +
             '</div>';
     }
 
-    function viewAll(section) {
-        var f = '';
-        if (section.type === 'category' || section.type === 'brand') f = section.value;
-        else if (section.type === 'status') f = section.value;
-        return 'onclick="shBrowseFilter(\'' + escJs(f || 'all') + '\')"';
+    // Build a link to the dedicated collection page for this section
+    function collectionHref(section) {
+        var t = section.type || 'manual';
+        var qs;
+        if (t === 'manual') {
+            if (!section.id) return null; // no dedicated page for ad-hoc manual defaults
+            qs = 'type=section&id=' + encodeURIComponent(section.id);
+        } else if (t === 'category' || t === 'brand' || t === 'status') {
+            qs = 'type=' + t + '&value=' + encodeURIComponent(section.value || '');
+        } else if (t === 'new') {
+            qs = 'type=new';
+        } else {
+            qs = 'type=all';
+        }
+        qs += '&title=' + encodeURIComponent(section.title || '');
+        return 'collection.html?' + qs;
     }
 
     function buildRail(section, items, i) {
         var wrap = document.createElement('div');
         wrap.className = 'home-sec home-sec-rail reveal';
-        var html = sectionHeader(section, viewAll(section));
+        var html = sectionHeader(section, collectionHref(section));
+        html += '<div class="rail-viewport">';
+        html += '<button type="button" class="rail-nav rail-nav-prev" aria-label="السابق">‹</button>';
         html += '<div class="rail-scroller" role="list">';
         items.forEach(function (p) { html += productCard(p, 'rail'); });
         html += '</div>';
+        html += '<button type="button" class="rail-nav rail-nav-next" aria-label="التالي">›</button>';
+        html += '</div>';
         wrap.innerHTML = html;
+        wireRail(wrap);
         return wrap;
     }
 
     function buildGrid(section, items, i) {
         var wrap = document.createElement('div');
         wrap.className = 'home-sec home-sec-grid reveal';
-        var html = sectionHeader(section, viewAll(section));
+        var html = sectionHeader(section, collectionHref(section));
         html += '<div class="sec-grid">';
         items.slice(0, 8).forEach(function (p) { html += productCard(p, 'grid'); });
         html += '</div>';
@@ -141,6 +174,7 @@
         var wrap = document.createElement('div');
         wrap.className = 'home-sec home-sec-spotlight reveal';
         var cover = section.cover || DEFAULT_COVERS[i % DEFAULT_COVERS.length];
+        var href = collectionHref(section);
         var html = '';
         html += '<div class="spotlight-banner" style="background-image:url(' + cover + ')">' +
             '<div class="spotlight-veil"></div>' +
@@ -148,32 +182,63 @@
             '<span class="spotlight-kicker">' + esc(section.kicker || 'مختارات إيناس') + '</span>' +
             '<h2>' + esc(section.title) + '</h2>' +
             (section.subtitle ? '<p>' + esc(section.subtitle) + '</p>' : '') +
-            '<button type="button" class="spotlight-cta" ' + viewAll(section) + '>تصفّحي التشكيلة</button>' +
+            (href ? '<a class="spotlight-cta" href="' + href + '">تصفّحي التشكيلة</a>' : '') +
             '</div></div>';
+        html += '<div class="rail-viewport">';
+        html += '<button type="button" class="rail-nav rail-nav-prev" aria-label="السابق">‹</button>';
         html += '<div class="rail-scroller spotlight-rail" role="list">';
         items.forEach(function (p) { html += productCard(p, 'rail'); });
         html += '</div>';
+        html += '<button type="button" class="rail-nav rail-nav-next" aria-label="التالي">›</button>';
+        html += '</div>';
         wrap.innerHTML = html;
+        wireRail(wrap);
         return wrap;
     }
 
+    // Wire rail arrow buttons (RTL-aware) + hide when not scrollable
+    function wireRail(wrap) {
+        var scroller = wrap.querySelector('.rail-scroller');
+        var prev = wrap.querySelector('.rail-nav-prev');
+        var next = wrap.querySelector('.rail-nav-next');
+        if (!scroller || !prev || !next) return;
+        function step() { return Math.max(220, Math.round(scroller.clientWidth * 0.8)); }
+        // In RTL, scrollLeft is negative; "prev" (‹, toward start) moves content right.
+        prev.addEventListener('click', function () { scroller.scrollBy({ left: step(), behavior: 'smooth' }); });
+        next.addEventListener('click', function () { scroller.scrollBy({ left: -step(), behavior: 'smooth' }); });
+        function sync() {
+            var overflow = scroller.scrollWidth - scroller.clientWidth > 8;
+            wrap.classList.toggle('rail-has-overflow', overflow);
+            var x = Math.abs(scroller.scrollLeft);
+            var max = scroller.scrollWidth - scroller.clientWidth - 4;
+            prev.classList.toggle('is-disabled', x <= 4);
+            next.classList.toggle('is-disabled', x >= max);
+        }
+        scroller.addEventListener('scroll', sync);
+        window.addEventListener('resize', sync);
+        setTimeout(sync, 60);
+    }
+
     function productCard(p, variant) {
-        var pricing = (typeof getFinalPrice === 'function') ? getFinalPrice(p, 0, window.discounts || []) : { final: p.price, original: p.price, hasDiscount: false };
+        var pricing = (typeof getFinalPrice === 'function') ? getFinalPrice(p, 0, window.discounts || []) : { final: p.price, original: p.price, hasDiscount: false, discountPercent: 0 };
         var priceHTML = (typeof getPriceHTML === 'function') ? getPriceHTML(pricing) : '<span>' + window.formatCurrency(p.price) + '</span>';
         var badge = (typeof getStatusBadge === 'function') ? getStatusBadge(p.status) : '';
         var fb = window.FALLBACK_IMAGE || '';
         var wished = window.isWished && window.isWished(p.id);
-        return '<article class="sec-card" role="listitem" onclick="openPDP(' + JSON.stringify(p.id) + ')">' +
+        var soldout = p.status === 'soldout';
+        var discountBadge = (pricing.hasDiscount && pricing.discountPercent) ? '<span class="sec-card-off">-' + pricing.discountPercent + '%</span>' : '';
+        return '<article class="sec-card' + (soldout ? ' is-soldout' : '') + '" role="listitem" onclick="openPDP(' + JSON.stringify(p.id) + ')">' +
             '<div class="sec-card-media">' +
             '<img src="' + (p.image || '') + '" alt="' + esc(p.name) + '" loading="lazy" onerror="this.src=\'' + fb + '\'">' +
-            badge +
+            '<div class="sec-card-badges">' + badge + discountBadge + '</div>' +
             '<button class="wish-btn' + (wished ? ' is-on' : '') + '" data-wish="' + esc(p.id) + '" onclick="toggleWishlist(\'' + escJs(String(p.id)) + '\',event)" aria-label="المفضلة">' + (wished ? '❤' : '♡') + '</button>' +
+            (soldout ? '' : '<button class="sec-card-quick" onclick="addToCart(event,' + JSON.stringify(p.id) + ')">أضيفي للسلة +</button>') +
             '</div>' +
             '<div class="sec-card-body">' +
             (p.brand ? '<div class="sec-card-brand">' + esc(p.brand) + '</div>' : '') +
             '<h3 class="sec-card-name">' + esc(p.name) + '</h3>' +
             '<div class="sec-card-foot"><div class="sec-card-price">' + priceHTML + '</div>' +
-            '<button class="sec-card-add" onclick="addToCart(event,' + JSON.stringify(p.id) + ')" aria-label="أضيفي للسلة">+</button></div>' +
+            (soldout ? '<span class="sec-card-soldout">نفذت</span>' : '<button class="sec-card-add" onclick="addToCart(event,' + JSON.stringify(p.id) + ')" aria-label="أضيفي للسلة">+</button>') + '</div>' +
             '</div></article>';
     }
 
@@ -212,4 +277,7 @@
 
     function esc(s) { return window.shEsc(s); }
     function escJs(s) { return String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+
+    // Expose the premium card so other pages (collection.html) render identically
+    window.shProductCard = productCard;
 })();

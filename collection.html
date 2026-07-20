@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>التشكيلة | إيناس شوب</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="logo.png">
+</head>
+<body class="collection-page">
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <img src="logo.png" alt="Dr. Enas Shop" class="logo-img" id="logoImg">
+                <span id="logoText" class="logo-text"><span class="logo-line1">Dr. <span style="color:#1a2a3a">Enas</span></span> <span class="logo-line2">Shop</span></span>
+            </a>
+            <div class="nav-search">
+                <input type="text" id="navSearchInput" placeholder="ابحثي عن منتج..." autocomplete="off">
+                <div class="search-dropdown" id="navSearchDropdown"></div>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">الرئيسية</a></li>
+                <li><a href="index.html#delivery">التوصيل</a></li>
+                <li><a href="index.html#contact">تواصلي معنا</a></li>
+                <li><a href="index.html#order-tracking">تتبّع الطلب</a></li>
+            </ul>
+            <button class="account-icon" id="accountIcon" onclick="openAccount()" aria-label="حسابي">
+                <span class="account-icon-glyph">👤</span>
+                <span class="account-icon-label" id="accountIconLabel">حسابي</span>
+            </button>
+            <div class="cart-icon" id="cartIcon" onclick="toggleCart()">
+                🛒
+                <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
+            </div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+        </div>
+    </nav>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="index.html" onclick="toggleMobileMenu()">الرئيسية</a>
+        <a href="index.html#delivery" onclick="toggleMobileMenu()">التوصيل</a>
+        <a href="index.html#contact" onclick="toggleMobileMenu()">تواصلي معنا</a>
+        <a href="index.html#order-tracking" onclick="toggleMobileMenu()">تتبّع الطلب</a>
+        <a href="#" onclick="toggleMobileMenu();openAccount();return false;">حسابي</a>
+        <a href="#" onclick="toggleMobileMenu();openSupport();return false;">الدعم والمساعدة</a>
+    </div>
+
+    <header class="collection-hero">
+        <div class="container">
+            <nav class="collection-breadcrumb" aria-label="مسار التصفح">
+                <a href="index.html">الرئيسية</a>
+                <span class="crumb-sep">›</span>
+                <span id="collectionCrumb">التشكيلة</span>
+            </nav>
+            <h1 class="collection-title" id="collectionTitle">التشكيلة</h1>
+            <p class="collection-sub" id="collectionSub">جاري تحميل المنتجات...</p>
+        </div>
+    </header>
+
+    <section class="products-section collection-body">
+        <div class="container products-shell">
+            <div class="collection-toolbar">
+                <span class="collection-count" id="collectionCount"></span>
+                <label class="collection-sort">
+                    <span>ترتيب حسب:</span>
+                    <select id="collectionSortSelect" onchange="setCollectionSort(this.value)">
+                        <option value="featured">المميّزة</option>
+                        <option value="newest">الأحدث</option>
+                        <option value="price-asc">السعر: من الأقل</option>
+                        <option value="price-desc">السعر: من الأعلى</option>
+                    </select>
+                </label>
+            </div>
+            <div class="store-loading" id="storeLoading">
+                <div class="spinner"></div>
+                <p>جاري تحميل المنتجات...</p>
+            </div>
+            <div class="products-grid sec-grid" id="productsGrid"></div>
+            <div class="collection-back">
+                <a href="index.html" class="browse-all-btn">‹ العودة للتسوق</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- PDP Modal -->
+    <div class="modal-overlay pdp-overlay" id="pdpModal" style="display:none;" onclick="closePDP(event)">
+        <div class="pdp-modal" onclick="event.stopPropagation()">
+            <button class="pdp-close" onclick="closePDP()">✕</button>
+            <div class="pdp-content">
+                <div class="pdp-image" id="pdpImage"></div>
+                <div class="pdp-info">
+                    <span class="product-brand" id="pdpBrand"></span>
+                    <h2 id="pdpName"></h2>
+                    <div class="pdp-meta" id="pdpMeta"></div>
+                    <div class="pdp-size-section" id="pdpSizeSection" style="display:none;">
+                        <label>الحجم:</label>
+                        <div class="pdp-size-options" id="pdpSizes"></div>
+                    </div>
+                    <div class="pdp-price" id="pdpPrice"></div>
+                    <div class="pdp-qty">
+                        <label>الكمية:</label>
+                        <div class="qty-selector">
+                            <button onclick="changePDPQty(-1)">−</button>
+                            <span id="pdpQty">1</span>
+                            <button onclick="changePDPQty(1)">+</button>
+                        </div>
+                    </div>
+                    <button class="btn-add-cart pdp-add-btn" id="pdpAddBtn" onclick="addFromPDP()">أضيفي للسلة</button>
+                </div>
+            </div>
+            <div class="pdp-related" id="pdpRelated" style="display:none;">
+                <h3>منتجات مشابهة</h3>
+                <div class="pdp-related-grid" id="pdpRelatedGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3>سلة التسوق</h3>
+            <button class="cart-close" onclick="toggleCart()">✕</button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <div class="cart-empty"><span>•</span><p>السلة فارغة</p></div>
+        </div>
+        <div class="cart-footer" id="cartFooter" style="display:none;">
+            <div class="cart-total"><span>المجموع:</span><span id="cartTotal">₪0</span></div>
+            <a href="checkout.html" class="btn-checkout" id="checkoutBtn">إتمام الطلب</a>
+            <button class="btn-clear-cart" onclick="clearCart()">تفريغ السلة</button>
+        </div>
+    </div>
+
+    <!-- Floating support button -->
+    <button class="support-fab" id="supportFab" onclick="openSupport()" aria-label="الدعم والمساعدة">
+        <span class="support-fab-icon">💬</span>
+        <span class="support-fab-text">مساعدة</span>
+    </button>
+
+    <!-- Auth / Account modal -->
+    <div class="modal-overlay account-overlay" id="accountModal" style="display:none;" onclick="closeAccount(event)">
+        <div class="account-modal" onclick="event.stopPropagation()">
+            <button class="pdp-close" onclick="closeAccount()" aria-label="إغلاق">✕</button>
+            <div id="accountModalBody"></div>
+        </div>
+    </div>
+
+    <!-- Support ticket modal -->
+    <div class="modal-overlay account-overlay" id="supportModal" style="display:none;" onclick="closeSupport(event)">
+        <div class="account-modal support-modal" onclick="event.stopPropagation()">
+            <button class="pdp-close" onclick="closeSupport()" aria-label="إغلاق">✕</button>
+            <div id="supportModalBody"></div>
+        </div>
+    </div>
+
+    <div id="flyingProduct" class="flying-product" style="display:none;"></div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>© 2026 إيناس شوب. جميع الحقوق محفوظة</p>
+        </div>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="data.js"></script>
+    <script src="shared.js"></script>
+    <script>window.__COLLECTION__ = true;</script>
+    <script src="script.js"></script>
+    <script src="account.js"></script>
+    <script src="sections.js"></script>
+</body>
+</html>
