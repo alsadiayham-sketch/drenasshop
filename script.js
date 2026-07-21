@@ -946,10 +946,13 @@ function flyToCart(imgElement, product) {
     var imgRect = imgElement.getBoundingClientRect();
     var cartRect = cartIcon.getBoundingClientRect();
 
-    // Create bubble element
+    // Create circular flying image
     var bubble = document.createElement('div');
     bubble.className = 'cart-bubble';
-    bubble.textContent = product.name;
+    var flyImg = document.createElement('img');
+    flyImg.src = (imgElement.currentSrc || imgElement.src || (product && product.image) || '');
+    flyImg.alt = '';
+    bubble.appendChild(flyImg);
     document.body.appendChild(bubble);
 
     // Position at product center
