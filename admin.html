@@ -217,7 +217,16 @@
                     <div class="form-group"><label>أقصى نسبة دفع بالنقاط (%)</label><input type="number" id="loyMaxPercent" min="0" max="100" value="30"></div>
                 </div>
                 <div class="form-group"><label>مكافأة التسجيل (نقاط)</label><input type="number" id="loySignupBonus" min="0" value="50"></div>
-                <div class="form-group"><label>المستويات (Tiers)</label><div id="loyTiersEditor" class="tiers-editor"></div><button type="button" class="btn-add-size" onclick="addTierRow()">+ إضافة مستوى</button></div>
+                <div class="form-group"><label>المستويات (Tiers)</label>
+                    <p class="field-hint">لكل مستوى: اسمه، أقل عدد نقاط للوصول إليه، مضاعف النقاط المكتسبة، وهل يشمل توصيلاً مجانياً.</p>
+                    <div class="tier-head" aria-hidden="true">
+                        <span>الاسم</span>
+                        <span>أقل نقاط للوصول</span>
+                        <span>مضاعف النقاط</span>
+                        <span>توصيل مجاني</span>
+                        <span></span>
+                    </div>
+                    <div id="loyTiersEditor" class="tiers-editor"></div><button type="button" class="btn-add-size" onclick="addTierRow()">+ إضافة مستوى</button></div>
                 <button type="submit" class="btn-save">حفظ إعدادات الولاء</button>
             </form>
         </div>

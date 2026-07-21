@@ -88,7 +88,7 @@
         if (hasStatus('special')) defs.push({ title: 'لمسة مميّزة', subtitle: 'منتجات منتقاة بعناية', type: 'status', value: 'special', layout: 'rail', cover: DEFAULT_COVERS[1], limit: 12 });
         var cats = [];
         products.forEach(function (p) { if (p.category && cats.indexOf(p.category) < 0) cats.push(p.category); });
-        cats.slice(0, 3).forEach(function (cat, idx) {
+        cats.forEach(function (cat, idx) {
             defs.push({ title: cat, subtitle: 'تشكيلة ' + cat, type: 'category', value: cat, layout: 'rail', cover: DEFAULT_COVERS[(idx + 2) % DEFAULT_COVERS.length], limit: 12 });
         });
         return defs;

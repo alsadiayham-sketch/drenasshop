@@ -323,6 +323,13 @@ function applySettings() {
             tiktokLink.style.display = 'none';
         }
     }
+
+    var dc = siteSettings.deliveryCosts || {};
+    var priceNodes = document.querySelectorAll('.delivery-price[data-zone]');
+    for (var i = 0; i < priceNodes.length; i++) {
+        var zone = priceNodes[i].getAttribute('data-zone');
+        if (dc[zone] != null) priceNodes[i].textContent = formatCurrency(dc[zone]);
+    }
 }
 
 function checkDiscountBanner() {

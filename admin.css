@@ -377,6 +377,9 @@ html, body { font-family: 'Tajawal', sans-serif; background: #f8fafb; color: #1a
 /* LOYALTY */
 .loyalty-form { max-width: 640px; }
 .tiers-editor { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.field-hint { font-size: 0.78rem; color: #5b7683; margin: 2px 0 10px; line-height: 1.6; }
+.tier-head { display: grid; grid-template-columns: 1.4fr 1fr 1fr auto auto; gap: 8px; align-items: center; margin-bottom: 6px; padding: 0 4px; }
+.tier-head span { font-size: 0.76rem; font-weight: 700; color: #0E3A47; }
 .tier-row { display: grid; grid-template-columns: 1.4fr 1fr 1fr auto auto; gap: 8px; align-items: center; }
 .tier-row input { padding: 9px 12px; border: 2px solid #e5e7eb; border-radius: 10px; font-family: 'Tajawal', sans-serif; font-size: 0.85rem; }
 .tier-row input:focus { border-color: #1B7A97; outline: none; }
@@ -400,6 +403,7 @@ html, body { font-family: 'Tajawal', sans-serif; background: #f8fafb; color: #1a
 @media (max-width: 760px) {
   .tickets-layout { grid-template-columns: 1fr; }
   .tier-row { grid-template-columns: 1fr 1fr; }
+  .tier-head { display: none; }
   .section-row { grid-template-columns: auto 60px 1fr; }
   .section-row-actions { grid-column: 1 / -1; }
 }
