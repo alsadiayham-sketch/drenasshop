@@ -48,6 +48,13 @@
         defs.forEach(function (section, i) {
             var items = resolveProducts(section, products);
             if (!items.length) return;
+            if (rendered > 0) {
+                var divider = document.createElement('div');
+                divider.className = 'home-sec-divider reveal';
+                divider.setAttribute('aria-hidden', 'true');
+                divider.innerHTML = '<span class="hsd-line"></span><span class="hsd-mark">✦</span><span class="hsd-line"></span>';
+                container.appendChild(divider);
+            }
             container.appendChild(section.layout === 'spotlight'
                 ? buildSpotlight(section, items, i)
                 : (section.layout === 'grid' ? buildGrid(section, items, i) : buildRail(section, items, i)));
@@ -119,7 +126,7 @@
 
     function sectionHeader(section, href) {
         return '<div class="home-sec-head reveal">' +
-            '<div><h2 class="home-sec-title">' + esc(section.title) + '</h2>' +
+            '<div class="home-sec-heading"><h2 class="home-sec-title">' + esc(section.title) + '</h2>' +
             (section.subtitle ? '<p class="home-sec-sub">' + esc(section.subtitle) + '</p>' : '') + '</div>' +
             (href ? '<a class="home-sec-viewall" href="' + href + '">عرض الكل <span class="va-arrow">‹</span></a>' : '') +
             '</div>';
