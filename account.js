@@ -243,7 +243,7 @@
         if (!list.length) { body.innerHTML = empty('قائمة المفضلة فارغة', ''); return; }
         var html = '<div class="acc-wishlist">';
         list.forEach(function (p) {
-            html += '<div class="acc-wish-item" onclick="closeAccount();openPDP(' + JSON.stringify(p.id) + ')">' +
+            html += '<div class="acc-wish-item" onclick="closeAccount();openPDP(\'' + String(p.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + '\')">' +
                 '<img src="' + (p.image || '') + '" alt="' + esc(p.name) + '" loading="lazy">' +
                 '<div class="acc-wish-name">' + esc(p.name) + '</div></div>';
         });

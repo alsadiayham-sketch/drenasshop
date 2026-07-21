@@ -7,7 +7,8 @@ var DEFAULT_SITE_SETTINGS = {
     heroSubtitle: 'منتجات عناية بالبشرة والجسم والشعر بأعلى جودة',
     aboutText: 'إيناس شوب - متجر متخصص بمنتجات العناية بالبشرة والجسم والشعر.\nنوفر أفضل الماركات العالمية الأصلية بأسعار منافسة.\nمنتجات كورية، تركية، وعالمية مختارة بعناية من قبل Dr. Enas Lubbadeh.',
     instagramLink: 'https://www.instagram.com/dr_enas_shop/',
-    tiktokLink: ''
+    tiktokLink: '',
+    deliveryCosts: { westbank: 20, jerusalem: 30, inside: 70 }
 };
 
 var BRANDS_DATA = [{ name: 'AXIS-Y', logo: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=100&h=100&fit=crop' }, { name: 'Beauty of Joseon', logo: 'https://images.unsplash.com/photo-1570194065650-d99fb4ee7cde?w=100&h=100&fit=crop' }, { name: 'I LOVE', logo: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=100&h=100&fit=crop' }, { name: 'Neat', logo: 'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=100&h=100&fit=crop' }, { name: 'VT Cosmetics', logo: 'https://images.unsplash.com/photo-1612817288484-6f916006741a?w=100&h=100&fit=crop' }, { name: 'Hoppa', logo: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=100&h=100&fit=crop' }, { name: 'SESDERMA', logo: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=100&h=100&fit=crop' }, { name: 'BioBalance', logo: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=100&h=100&fit=crop' }];
@@ -86,7 +87,22 @@ function normalizeSettings(settings) {
         heroSubtitle: String(source.heroSubtitle || DEFAULT_SITE_SETTINGS.heroSubtitle),
         aboutText: String(source.aboutText || DEFAULT_SITE_SETTINGS.aboutText),
         instagramLink: String(source.instagramLink || DEFAULT_SITE_SETTINGS.instagramLink),
-        tiktokLink: String(source.tiktokLink || DEFAULT_SITE_SETTINGS.tiktokLink)
+        tiktokLink: String(source.tiktokLink || DEFAULT_SITE_SETTINGS.tiktokLink),
+        deliveryCosts: normalizeDeliveryCosts(source.deliveryCosts)
+    };
+}
+
+function normalizeDeliveryCosts(raw) {
+    var src = raw || {};
+    var def = DEFAULT_SITE_SETTINGS.deliveryCosts;
+    function num(v, fallback) {
+        var n = Number(v);
+        return (isFinite(n) && n >= 0) ? n : fallback;
+    }
+    return {
+        westbank: num(src.westbank, def.westbank),
+        jerusalem: num(src.jerusalem, def.jerusalem),
+        inside: num(src.inside, def.inside)
     };
 }
 

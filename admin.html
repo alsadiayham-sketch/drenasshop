@@ -157,6 +157,12 @@
                 <div class="form-group"><label>نص من نحن</label><textarea id="settingAbout" rows="4"></textarea></div>
                 <div class="form-group"><label>رابط Instagram</label><input type="url" id="settingInstagram" placeholder="https://instagram.com/..."></div>
                 <div class="form-group"><label>رابط TikTok</label><input type="url" id="settingTiktok" placeholder="https://tiktok.com/..."></div>
+                <h3 style="margin:18px 0 4px; font-size:1rem;">أسعار مناطق التوصيل (₪)</h3>
+                <div class="delivery-cost-grid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">
+                    <div class="form-group"><label>الضفة</label><input type="number" min="0" step="1" id="settingDeliveryWestbank" placeholder="20"></div>
+                    <div class="form-group"><label>القدس</label><input type="number" min="0" step="1" id="settingDeliveryJerusalem" placeholder="30"></div>
+                    <div class="form-group"><label>الداخل</label><input type="number" min="0" step="1" id="settingDeliveryInside" placeholder="70"></div>
+                </div>
                 <button type="submit" class="btn-save">حفظ الإعدادات</button>
             </form>
         </div>

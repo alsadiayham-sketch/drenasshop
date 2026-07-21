@@ -580,6 +580,13 @@ function loadSettingsForm() {
     document.getElementById('settingAbout').value = siteSettings.aboutText || '';
     document.getElementById('settingInstagram').value = siteSettings.instagramLink || '';
     document.getElementById('settingTiktok').value = siteSettings.tiktokLink || '';
+    var dc = siteSettings.deliveryCosts || { westbank: 20, jerusalem: 30, inside: 70 };
+    var wb = document.getElementById('settingDeliveryWestbank');
+    if (wb) wb.value = dc.westbank;
+    var jr = document.getElementById('settingDeliveryJerusalem');
+    if (jr) jr.value = dc.jerusalem;
+    var ins = document.getElementById('settingDeliveryInside');
+    if (ins) ins.value = dc.inside;
 }
 
 async function saveSettingsForm(event) {
@@ -589,7 +596,12 @@ async function saveSettingsForm(event) {
         heroSubtitle: document.getElementById('settingHero').value,
         aboutText: document.getElementById('settingAbout').value,
         instagramLink: document.getElementById('settingInstagram').value,
-        tiktokLink: document.getElementById('settingTiktok').value
+        tiktokLink: document.getElementById('settingTiktok').value,
+        deliveryCosts: {
+            westbank: document.getElementById('settingDeliveryWestbank').value,
+            jerusalem: document.getElementById('settingDeliveryJerusalem').value,
+            inside: document.getElementById('settingDeliveryInside').value
+        }
     });
     setAdminLoading(true);
     await db.collection('settings').doc('config').set(siteSettings, { merge: true });

@@ -89,7 +89,7 @@
         var cats = [];
         products.forEach(function (p) { if (p.category && cats.indexOf(p.category) < 0) cats.push(p.category); });
         cats.slice(0, 3).forEach(function (cat, idx) {
-            defs.push({ title: cat, subtitle: 'تشكيلة ' + cat, type: 'category', value: cat, layout: idx === 0 ? 'grid' : 'rail', cover: DEFAULT_COVERS[(idx + 2) % DEFAULT_COVERS.length], limit: 12 });
+            defs.push({ title: cat, subtitle: 'تشكيلة ' + cat, type: 'category', value: cat, layout: 'rail', cover: DEFAULT_COVERS[(idx + 2) % DEFAULT_COVERS.length], limit: 12 });
         });
         return defs;
     }
@@ -227,18 +227,18 @@
         var wished = window.isWished && window.isWished(p.id);
         var soldout = p.status === 'soldout';
         var discountBadge = (pricing.hasDiscount && pricing.discountPercent) ? '<span class="sec-card-off">-' + pricing.discountPercent + '%</span>' : '';
-        return '<article class="sec-card' + (soldout ? ' is-soldout' : '') + '" role="listitem" onclick="openPDP(' + JSON.stringify(p.id) + ')">' +
+        return '<article class="sec-card' + (soldout ? ' is-soldout' : '') + '" role="listitem" onclick="openPDP(\'' + escJs(String(p.id)) + '\')">' +
             '<div class="sec-card-media">' +
             '<img src="' + (p.image || '') + '" alt="' + esc(p.name) + '" loading="lazy" onerror="this.src=\'' + fb + '\'">' +
             '<div class="sec-card-badges">' + badge + discountBadge + '</div>' +
             '<button class="wish-btn' + (wished ? ' is-on' : '') + '" data-wish="' + esc(p.id) + '" onclick="toggleWishlist(\'' + escJs(String(p.id)) + '\',event)" aria-label="المفضلة">' + (wished ? '❤' : '♡') + '</button>' +
-            (soldout ? '' : '<button class="sec-card-quick" onclick="addToCart(event,' + JSON.stringify(p.id) + ')">أضيفي للسلة +</button>') +
+            (soldout ? '' : '<button class="sec-card-quick" onclick="addToCart(event,\'' + escJs(String(p.id)) + '\')">أضيفي للسلة +</button>') +
             '</div>' +
             '<div class="sec-card-body">' +
             (p.brand ? '<div class="sec-card-brand">' + esc(p.brand) + '</div>' : '') +
             '<h3 class="sec-card-name">' + esc(p.name) + '</h3>' +
             '<div class="sec-card-foot"><div class="sec-card-price">' + priceHTML + '</div>' +
-            (soldout ? '<span class="sec-card-soldout">نفذت</span>' : '<button class="sec-card-add" onclick="addToCart(event,' + JSON.stringify(p.id) + ')" aria-label="أضيفي للسلة">+</button>') + '</div>' +
+            (soldout ? '<span class="sec-card-soldout">نفذت</span>' : '<button class="sec-card-add" onclick="addToCart(event,\'' + escJs(String(p.id)) + '\')" aria-label="أضيفي للسلة">+</button>') + '</div>' +
             '</div></article>';
     }
 

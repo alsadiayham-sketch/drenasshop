@@ -911,12 +911,14 @@ function addToCart(event, productId) {
     var product = products.find(function (entry) { return entry.id === productId; });
     if (!product || product.status === 'soldout') return;
 
-    var qty = parseInt(document.getElementById('cardQty-' + productId).textContent, 10) || 1;
+    var qtyEl = document.getElementById('cardQty-' + productId);
+    var qty = qtyEl ? (parseInt(qtyEl.textContent, 10) || 1) : 1;
     var sizeIdx = getSelectedCardSizeIndex(productId);
     var pricing = getFinalPrice(product, sizeIdx, discounts);
     var btn = event.currentTarget;
-    var img = btn.closest('.product-card').querySelector('.product-image img');
-    flyToCart(img, product);
+    var card = btn.closest('.product-card') || btn.closest('.sec-card');
+    var img = card ? card.querySelector('.product-image img, .sec-card-media img, img') : null;
+    if (img) flyToCart(img, product);
 
     var existing = cart.find(function (item) { return item.id === productId && item.sizeIdx === sizeIdx; });
     if (existing) existing.qty += qty;
@@ -926,14 +928,15 @@ function addToCart(event, productId) {
     updateCartBadge();
     updateCheckoutLink(updateCartTotal());
 
+    var originalText = btn.textContent;
     btn.textContent = 'تمت الإضافة';
     btn.classList.add('added');
     setTimeout(function () {
-        btn.textContent = 'أضيفي';
+        btn.textContent = originalText;
         btn.classList.remove('added');
     }, 1500);
 
-    document.getElementById('cardQty-' + productId).textContent = '1';
+    if (qtyEl) qtyEl.textContent = '1';
 }
 
 function flyToCart(imgElement, product) {

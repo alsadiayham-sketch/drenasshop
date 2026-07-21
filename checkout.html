@@ -163,7 +163,7 @@
         var selectedCardId = null;
         var selectedAddressId = null;
 
-        var DELIVERY_COSTS = { westbank: 20, jerusalem: 30, inside: 50 };
+        function DELIVERY_COSTS_MAP() { return (siteSettings && siteSettings.deliveryCosts) ? siteSettings.deliveryCosts : { westbank: 20, jerusalem: 30, inside: 70 }; }
         var DELIVERY_LABELS = { westbank: 'الضفة', jerusalem: 'القدس', inside: 'الداخل' };
 
         document.addEventListener('DOMContentLoaded', initializeCheckout);
@@ -329,9 +329,10 @@
                 html += '<div class="delivery-regions" style="margin-top:15px;">';
                 html += '<h4 style="margin-bottom:10px; font-size:0.95rem;">اختاري المنطقة:</h4>';
                 html += '<div class="region-options">';
-                html += '<div class="region-option ' + (selectedRegion === 'westbank' ? 'selected' : '') + '" onclick="selectRegion(\'westbank\')"><span>الضفة</span><span class="region-cost">₪20</span></div>';
-                html += '<div class="region-option ' + (selectedRegion === 'jerusalem' ? 'selected' : '') + '" onclick="selectRegion(\'jerusalem\')"><span>القدس</span><span class="region-cost">₪30</span></div>';
-                html += '<div class="region-option ' + (selectedRegion === 'inside' ? 'selected' : '') + '" onclick="selectRegion(\'inside\')"><span>الداخل</span><span class="region-cost">₪50</span></div>';
+                var dcMap = DELIVERY_COSTS_MAP();
+                html += '<div class="region-option ' + (selectedRegion === 'westbank' ? 'selected' : '') + '" onclick="selectRegion(\'westbank\')"><span>الضفة</span><span class="region-cost">' + formatCurrency(dcMap.westbank) + '</span></div>';
+                html += '<div class="region-option ' + (selectedRegion === 'jerusalem' ? 'selected' : '') + '" onclick="selectRegion(\'jerusalem\')"><span>القدس</span><span class="region-cost">' + formatCurrency(dcMap.jerusalem) + '</span></div>';
+                html += '<div class="region-option ' + (selectedRegion === 'inside' ? 'selected' : '') + '" onclick="selectRegion(\'inside\')"><span>الداخل</span><span class="region-cost">' + formatCurrency(dcMap.inside) + '</span></div>';
                 html += '</div></div>';
             }
             html += '</div>';
@@ -525,7 +526,7 @@
 
         function getDeliveryCost() {
             if (selectedDelivery === 'pickup') return 0;
-            var baseCost = DELIVERY_COSTS[selectedRegion] || 0;
+            var baseCost = DELIVERY_COSTS_MAP()[selectedRegion] || 0;
             // Check for free delivery discount
             var subtotal = getSubtotal();
             for (var i = 0; i < discounts.length; i++) {
