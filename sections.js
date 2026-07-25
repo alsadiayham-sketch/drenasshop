@@ -13,20 +13,10 @@
         'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=1200&q=80',
         'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=1200&q=80'
     ];
-    var sectionsData = null; // null = not loaded yet
     var categoriesData = null;
 
     document.addEventListener('DOMContentLoaded', function () {
         if (!window.db) return;
-        window.db.collection('sections').orderBy('order', 'asc').onSnapshot(function (snap) {
-            sectionsData = [];
-            snap.forEach(function (d) {
-                var s = d.data(); s.id = d.id;
-                if (s.visible === false) return;
-                sectionsData.push(s);
-            });
-            render();
-        }, function () { sectionsData = []; render(); });
         window.db.collection('categories').orderBy('order', 'asc').onSnapshot(function (snap) {
             categoriesData = [];
             snap.forEach(function (d) { var c = d.data(); c.id = d.id; categoriesData.push(c); });
@@ -41,9 +31,9 @@
         var host = document.getElementById('homeSections');
         if (!host) return;
         var products = window.products || [];
-        if (!products.length && sectionsData === null) return; // wait
+        if (!products.length && categoriesData === null) return; // wait for first data
 
-        var defs = (sectionsData && sectionsData.length) ? sectionsData : buildDefaults(products);
+        var defs = buildDefaults(products); // smart curated rails (bestseller / new / special)
         var container = document.createElement('div');
         container.className = 'container';
 
