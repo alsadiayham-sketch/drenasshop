@@ -39,7 +39,6 @@
 
         var rendered = 0;
         var showcase = buildCategoryShowcase(products);
-        if (showcase) { container.appendChild(showcase); rendered++; }
 
         defs.forEach(function (section, i) {
             var items = resolveProducts(section, products);
@@ -55,7 +54,32 @@
                 ? buildSpotlight(section, items, i)
                 : (section.layout === 'grid' ? buildGrid(section, items, i) : buildRail(section, items, i)));
             rendered++;
+
+            // Place the category showcase right after the bestseller spotlight
+            if (showcase && section.value === 'bestseller') {
+                var d2 = document.createElement('div');
+                d2.className = 'home-sec-divider reveal';
+                d2.setAttribute('aria-hidden', 'true');
+                d2.innerHTML = '<span class="hsd-line"></span><span class="hsd-mark">✦</span><span class="hsd-line"></span>';
+                container.appendChild(d2);
+                container.appendChild(showcase);
+                rendered++;
+                showcase = null;
+            }
         });
+
+        // Fallback: if bestseller wasn't rendered, still show the showcase first
+        if (showcase) {
+            if (rendered > 0) {
+                var d3 = document.createElement('div');
+                d3.className = 'home-sec-divider reveal';
+                d3.setAttribute('aria-hidden', 'true');
+                d3.innerHTML = '<span class="hsd-line"></span><span class="hsd-mark">✦</span><span class="hsd-line"></span>';
+                container.insertBefore(d3, container.firstChild);
+            }
+            container.insertBefore(showcase, container.firstChild);
+            rendered++;
+        }
 
         if (!rendered) {
             var sk = document.getElementById('homeSectionsSkeleton');
