@@ -245,6 +245,16 @@ function renderCollection() {
         return;
     }
 
+    // type=category → load matching category doc for hero image + description
+    if (params.type === 'category' && params.value && window.db && renderCollection._catValue !== params.value) {
+        renderCollection._catValue = params.value;
+        window.db.collection('categories').where('name', '==', params.value).limit(1).get().then(function (snap) {
+            renderCollection._category = snap.empty ? null : snap.docs[0].data();
+            renderCollection();
+        }).catch(function () { renderCollection._category = null; renderCollection(); });
+        return;
+    }
+
     var list = resolveCollectionProducts(params);
     list = sortCollection(list, COLLECTION_SORT);
 
@@ -255,7 +265,25 @@ function renderCollection() {
     if (countEl) countEl.textContent = list.length + ' منتج';
     document.title = heading + ' | إيناس شوب';
 
+    if (params.type === 'category') applyCategoryHero(renderCollection._category);
+
     renderProducts(list);
+}
+
+function applyCategoryHero(cat) {
+    var hero = document.getElementById('collectionHero');
+    var media = document.getElementById('collectionHeroMedia');
+    var subEl = document.getElementById('collectionSub');
+    if (!hero) return;
+    var img = cat && cat.image ? cat.image : '';
+    if (img) {
+        hero.classList.add('has-media');
+        if (media) media.style.backgroundImage = 'url("' + img + '")';
+    } else {
+        hero.classList.remove('has-media');
+        if (media) media.style.backgroundImage = '';
+    }
+    if (cat && cat.description && subEl) subEl.textContent = cat.description;
 }
 
 function resolveCollectionProducts(params) {

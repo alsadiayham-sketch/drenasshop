@@ -28,7 +28,7 @@
                 <div class="admin-tabs">
                     <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard', this)">لوحة المعلومات</button>
                     <button class="tab-btn" data-tab="products" onclick="switchTab('products', this)">المنتجات</button>
-                    <button class="tab-btn" data-tab="sections" onclick="switchTab('sections', this)">الأقسام</button>
+                    <button class="tab-btn" data-tab="sections" onclick="switchTab('sections', this)">الفئات</button>
                     <button class="tab-btn" data-tab="offers" onclick="switchTab('offers', this)">العروض</button>
                     <button class="tab-btn" data-tab="hero" onclick="switchTab('hero', this)">العرض الرئيسي</button>
                     <button class="tab-btn" data-tab="orders" onclick="switchTab('orders', this)" id="ordersTabBtn">الطلبات<span class="order-badge" id="orderBadge" style="display:none;"></span></button>
@@ -167,14 +167,17 @@
             </form>
         </div>
 
-        <!-- SECTIONS TAB -->
+        <!-- CATEGORIES TAB (internal key stays "sections" for permissions) -->
         <div class="tab-content" id="tab-sections">
             <div class="tab-header">
-                <h3>أقسام الصفحة الرئيسية</h3>
-                <div class="header-actions"><button class="btn-add" onclick="openSectionModal()">إضافة قسم</button></div>
+                <h3>الفئات</h3>
+                <div class="header-actions">
+                    <button class="btn-secondary" onclick="syncCategoriesFromProducts()">مزامنة من المنتجات</button>
+                    <button class="btn-add" onclick="openCategoryModal()">إضافة فئة</button>
+                </div>
             </div>
-            <p class="tab-hint">رتّبي كيف تظهر منتجاتك في الصفحة الرئيسية عبر أقسام مخصّصة (شريط، واجهة مميزة، شبكة). اسحبي بالترتيب عبر الأسهم.</p>
-            <div id="sectionsList" class="sections-admin-list"></div>
+            <p class="tab-hint">كل فئة تمثّل نوع منتج (مثل عناية بالبشرة، واقي شمس). أضيفي صورة ووصفاً لكل فئة — ستظهر الصورة كواجهة رئيسية في صفحة الفئة، وكبطاقة في الصفحة الرئيسية. رتّبي الظهور عبر الأسهم.</p>
+            <div id="categoriesAdminList" class="categories-admin-list"></div>
         </div>
 
         <!-- CUSTOMERS TAB -->
@@ -382,41 +385,21 @@
     </div>
 
     <!-- Section Modal -->
-    <div class="modal-overlay" id="sectionModal" style="display:none;">
+    <div class="modal-overlay" id="categoryModal" style="display:none;">
         <div class="modal">
-            <h3 id="sectionModalTitle">إضافة قسم</h3>
-            <form onsubmit="event.preventDefault(); saveSection()">
-                <input type="hidden" id="sectionId">
-                <div class="form-row">
-                    <div class="form-group"><label>عنوان القسم</label><input type="text" id="sectionTitle" placeholder="مثال: الأكثر مبيعاً" required></div>
-                    <div class="form-group"><label>وصف مختصر</label><input type="text" id="sectionSubtitle" placeholder="اختياري"></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>نوع العرض (Layout)</label><select id="sectionLayout">
-                        <option value="rail">شريط أفقي</option><option value="spotlight">واجهة مميزة</option><option value="grid">شبكة</option>
-                    </select></div>
-                    <div class="form-group"><label>طريقة اختيار المنتجات</label><select id="sectionType" onchange="onSectionTypeChange()">
-                        <option value="manual">اختيار يدوي</option><option value="category">حسب الفئة</option><option value="brand">حسب الماركة</option><option value="status">حسب الحالة</option><option value="new">وصل حديثاً</option>
-                    </select></div>
-                </div>
-                <div class="form-group" id="sectionValueGroup" style="display:none;"><label>القيمة</label><select id="sectionValue"></select></div>
-                <div class="form-group" id="sectionManualGroup"><label>اختاري المنتجات</label>
-                    <div class="offer-products-search"><input type="text" id="sectionProductSearch" placeholder="ابحثي عن منتج..." oninput="filterSectionProducts()"></div>
-                    <div class="offer-products-grid" id="sectionProductsGrid"></div>
-                    <small class="muted"><span id="sectionSelectedCount">0</span> منتج مختار</small>
-                </div>
-                <div class="form-group" id="sectionCoverGroup"><label>صورة الغلاف (للواجهة المميزة)</label>
+            <h3 id="categoryModalTitle">إضافة فئة</h3>
+            <form onsubmit="event.preventDefault(); saveCategory()">
+                <input type="hidden" id="categoryId">
+                <div class="form-group"><label>اسم الفئة</label><input type="text" id="categoryName" placeholder="مثال: عناية بالبشرة" required></div>
+                <div class="form-group"><label>صورة الفئة (تظهر كواجهة في صفحة الفئة وبطاقة في الرئيسية)</label>
                     <div class="image-upload-group">
-                        <input type="file" id="sectionCoverFile" accept="image/*">
+                        <input type="file" id="categoryImageFile" accept="image/*">
                         <span class="upload-or">أو</span>
-                        <input type="url" id="sectionCover" placeholder="رابط الصورة https://...">
+                        <input type="url" id="categoryImage" placeholder="رابط الصورة https://...">
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group"><label>الحد الأقصى للمنتجات</label><input type="number" id="sectionLimit" value="12" min="2" max="30"></div>
-                    <div class="form-group checkbox-field" style="align-self:end;"><input type="checkbox" id="sectionVisible" checked><label for="sectionVisible">ظاهر في المتجر</label></div>
-                </div>
-                <div class="modal-actions"><button type="submit" class="btn-save">حفظ القسم</button><button type="button" class="btn-cancel" onclick="closeModal('sectionModal')">إلغاء</button></div>
+                <div class="form-group"><label>وصف الفئة</label><textarea id="categoryDesc" rows="3" placeholder="وصف قصير يظهر أسفل عنوان صفحة الفئة..."></textarea></div>
+                <div class="modal-actions"><button type="submit" class="btn-save">حفظ الفئة</button><button type="button" class="btn-cancel" onclick="closeModal('categoryModal')">إلغاء</button></div>
             </form>
         </div>
     </div>

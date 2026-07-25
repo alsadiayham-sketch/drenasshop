@@ -10,9 +10,9 @@
     'use strict';
 
     var esc = window.escapeHtml || window.shEsc;
-    var extSections = [], extCustomers = [], extTickets = [], extWorkers = [];
+    var extCategories = [], extCustomers = [], extTickets = [], extWorkers = [];
     var extLoyalty = window.SH_DEFAULT_LOYALTY;
-    var sectionSelectedIds = [];
+    var seedTried = false;
     var ticketFilter = 'open';
     var currentTicketId = null;
     var extUnsub = [];
@@ -39,9 +39,10 @@
         extUnsub = [];
         if (!window.db) return;
 
-        extUnsub.push(db.collection('sections').orderBy('order', 'asc').onSnapshot(function (snap) {
-            extSections = snap.docs.map(function (d) { var s = d.data(); s.id = d.id; return s; });
-            renderSectionsList();
+        extUnsub.push(db.collection('categories').orderBy('order', 'asc').onSnapshot(function (snap) {
+            extCategories = snap.docs.map(function (d) { var c = d.data(); c.id = d.id; return c; });
+            renderCategoriesList();
+            maybeSeedCategories();
         }, function () {}));
 
         extUnsub.push(db.collection('customers').onSnapshot(function (snap) {
@@ -105,141 +106,151 @@
     };
 
     /* ============================================================
-       SECTIONS
+       CATEGORIES (الفئات) — product types with image + description
        ============================================================ */
-    function renderSectionsList() {
-        var host = document.getElementById('sectionsList');
+    var CAT_COVERS = window.SH_DEFAULT_CATEGORY_COVERS || [];
+
+    function catCover(c, idx) {
+        return (c && c.image) ? c.image : (CAT_COVERS[(idx || 0) % (CAT_COVERS.length || 1)] || '');
+    }
+    function productCountForCategory(name) {
+        var n = 0;
+        (window.products || []).forEach(function (p) { if (p.category === name) n++; });
+        return n;
+    }
+    window.renderCategoriesList = function () {
+        var host = document.getElementById('categoriesAdminList');
         if (!host) return;
-        if (!extSections.length) {
-            host.innerHTML = emptyCard('لا توجد أقسام مخصّصة بعد', 'المتجر يعرض أقساماً افتراضية ذكية. أضيفي قسماً للتحكم الكامل.');
+        if (!extCategories.length) {
+            host.innerHTML = emptyCard('لا توجد فئات بعد', 'أضيفي فئة يدوياً أو زامني الفئات من منتجاتك.');
             return;
         }
         var html = '';
-        extSections.forEach(function (s, idx) {
-            var count = s.type === 'manual' ? (s.productIds || []).length + ' منتج' : typeLabel(s.type) + (s.value ? ' • ' + s.value : '');
-            html += '<div class="section-row' + (s.visible === false ? ' is-hidden' : '') + '">';
-            html += '<div class="section-row-move">' +
-                '<button ' + (idx === 0 ? 'disabled' : '') + ' onclick="moveSection(\'' + s.id + '\',-1)" title="أعلى">▲</button>' +
-                '<button ' + (idx === extSections.length - 1 ? 'disabled' : '') + ' onclick="moveSection(\'' + s.id + '\',1)" title="أسفل">▼</button></div>';
-            html += (s.cover ? '<img class="section-row-cover" src="' + esc(s.cover) + '" alt="">' : '<div class="section-row-cover ph">' + layoutIcon(s.layout) + '</div>');
-            html += '<div class="section-row-info"><h4>' + esc(s.title) + '</h4>' +
-                '<p>' + esc(count) + ' • <span class="lay-badge">' + layoutLabel(s.layout) + '</span></p></div>';
-            html += '<div class="section-row-actions">' +
-                '<button class="mini-btn" onclick="toggleSectionVisible(\'' + s.id + '\')">' + (s.visible === false ? 'إظهار' : 'إخفاء') + '</button>' +
-                '<button class="mini-btn" onclick="editSection(\'' + s.id + '\')">تعديل</button>' +
-                '<button class="mini-btn danger" onclick="deleteSection(\'' + s.id + '\')">حذف</button></div>';
+        extCategories.forEach(function (c, idx) {
+            var count = productCountForCategory(c.name);
+            var desc = c.description ? esc(c.description) : '<span class="muted">بدون وصف</span>';
+            html += '<div class="cat-admin-row">';
+            html += '<div class="cat-row-move">' +
+                '<button ' + (idx === 0 ? 'disabled' : '') + ' onclick="moveCategory(\'' + escJs(String(c.id)) + '\',-1)" title="أعلى" aria-label="نقل لأعلى">▲</button>' +
+                '<button ' + (idx === extCategories.length - 1 ? 'disabled' : '') + ' onclick="moveCategory(\'' + escJs(String(c.id)) + '\',1)" title="أسفل" aria-label="نقل لأسفل">▼</button></div>';
+            html += '<img class="cat-row-cover" src="' + esc(catCover(c, idx)) + '" alt="" loading="lazy">';
+            html += '<div class="cat-row-info"><h4>' + esc(c.name) + '</h4>' +
+                '<p class="cat-row-count">' + count + ' منتج</p>' +
+                '<p class="cat-row-desc">' + desc + '</p></div>';
+            html += '<div class="cat-row-actions">' +
+                '<button class="mini-btn" onclick="editCategory(\'' + escJs(String(c.id)) + '\')">تعديل</button>' +
+                '<button class="mini-btn danger" onclick="deleteCategory(\'' + escJs(String(c.id)) + '\')">حذف</button></div>';
             html += '</div>';
         });
         host.innerHTML = html;
+        if (window.shSyncCategoryDatalist) window.shSyncCategoryDatalist(extCategories.map(function (c) { return c.name; }));
+    };
+
+    window.shSyncCategoryDatalist = function (managedNames) {
+        var dl = document.getElementById('categoriesList');
+        if (!dl) return;
+        var all = uniq((managedNames || []).concat((window.products || []).map(function (p) { return p.category; })).filter(Boolean));
+        dl.innerHTML = all.map(function (v) { return '<option value="' + esc(v) + '">'; }).join('');
+    };
+
+    function syncCategoriesFromProducts(silent) {
+        if (!can('sections', 'write')) { if (!silent) setAdminStatus('ليس لديك صلاحية لهذا الإجراء.', 'error'); return; }
+        var existing = {};
+        extCategories.forEach(function (c) { existing[c.name] = true; });
+        var names = uniq((window.products || []).map(function (p) { return p.category; }).filter(Boolean));
+        var toAdd = names.filter(function (n) { return !existing[n]; });
+        if (!toAdd.length) { if (!silent) setAdminStatus('كل الفئات مزامَنة بالفعل.', 'success'); return; }
+        var batch = db.batch();
+        var base = extCategories.length;
+        toAdd.forEach(function (name, i) {
+            var ref = db.collection('categories').doc();
+            batch.set(ref, {
+                name: name,
+                image: CAT_COVERS[(base + i) % (CAT_COVERS.length || 1)] || '',
+                description: '',
+                order: base + i,
+                createdAt: new Date().toISOString()
+            });
+        });
+        batch.commit().then(function () {
+            if (!silent) setAdminStatus('تمت مزامنة ' + toAdd.length + ' فئة من المنتجات.', 'success');
+        }).catch(function (e) { if (!silent) setAdminStatus('تعذّرت المزامنة: ' + e.message, 'error'); });
     }
-    function typeLabel(t) { return { manual: 'يدوي', category: 'فئة', brand: 'ماركة', status: 'حالة', 'new': 'وصل حديثاً' }[t] || t; }
-    function layoutLabel(l) { return { rail: 'شريط', spotlight: 'واجهة مميزة', grid: 'شبكة' }[l] || l; }
-    function layoutIcon(l) { return { rail: '≡', spotlight: '★', grid: '▦' }[l] || '≡'; }
+    window.syncCategoriesFromProducts = function () { syncCategoriesFromProducts(false); };
 
-    window.openSectionModal = function (section) {
-        if (!requireWrite('sections')) return;
-        document.getElementById('sectionModalTitle').textContent = section ? 'تعديل القسم' : 'إضافة قسم';
-        document.getElementById('sectionId').value = section ? section.id : '';
-        document.getElementById('sectionTitle').value = section ? section.title : '';
-        document.getElementById('sectionSubtitle').value = section ? (section.subtitle || '') : '';
-        document.getElementById('sectionLayout').value = section ? (section.layout || 'rail') : 'rail';
-        document.getElementById('sectionType').value = section ? (section.type || 'manual') : 'manual';
-        document.getElementById('sectionCover').value = section ? (section.cover || '') : '';
-        document.getElementById('sectionCoverFile').value = '';
-        document.getElementById('sectionLimit').value = section ? (section.limit || 12) : 12;
-        document.getElementById('sectionVisible').checked = section ? section.visible !== false : true;
-        sectionSelectedIds = section && section.productIds ? section.productIds.map(String) : [];
-        onSectionTypeChange();
-        if (section && section.value) document.getElementById('sectionValue').value = section.value;
-        openM('sectionModal');
-    };
-    window.editSection = function (id) { var s = extSections.filter(function (x) { return x.id === id; })[0]; if (s) openSectionModal(s); };
-
-    window.onSectionTypeChange = function () {
-        var type = document.getElementById('sectionType').value;
-        var valGroup = document.getElementById('sectionValueGroup');
-        var manualGroup = document.getElementById('sectionManualGroup');
-        manualGroup.style.display = type === 'manual' ? 'block' : 'none';
-        valGroup.style.display = (type === 'category' || type === 'brand' || type === 'status') ? 'block' : 'none';
-        if (type === 'manual') renderSectionProducts();
-        else if (type === 'category' || type === 'brand' || type === 'status') {
-            var sel = document.getElementById('sectionValue');
-            var opts;
-            if (type === 'status') opts = [['bestseller', 'الأكثر مبيعاً'], ['special', 'مميز'], ['normal', 'عادي'], ['soldout', 'نفذت الكمية']].map(function (o) { return '<option value="' + o[0] + '">' + o[1] + '</option>'; });
-            else {
-                var key = type === 'category' ? 'category' : 'brand';
-                var vals = uniq((window.products || []).map(function (p) { return p[key]; }).filter(Boolean));
-                opts = vals.map(function (v) { return '<option value="' + esc(v) + '">' + esc(v) + '</option>'; });
-            }
-            sel.innerHTML = opts.join('');
-        }
-    };
-    function renderSectionProducts() {
-        var grid = document.getElementById('sectionProductsGrid');
-        var q = (document.getElementById('sectionProductSearch').value || '').trim();
-        var list = (window.products || []).filter(function (p) { return !q || (p.name || '').indexOf(q) >= 0 || (p.brand || '').toLowerCase().indexOf(q.toLowerCase()) >= 0; });
-        grid.innerHTML = list.map(function (p) {
-            var on = sectionSelectedIds.indexOf(String(p.id)) >= 0;
-            return '<div class="pick-card' + (on ? ' selected' : '') + '" onclick="toggleSectionProduct(\'' + escJs(String(p.id)) + '\')">' +
-                '<img src="' + esc(p.image || '') + '" alt=""><span>' + esc(p.name) + '</span></div>';
-        }).join('');
-        document.getElementById('sectionSelectedCount').textContent = sectionSelectedIds.length;
+    function maybeSeedCategories() {
+        if (seedTried || extCategories.length) return;
+        if (!(window.products || []).length) return;
+        if (!can('sections', 'write')) return;
+        seedTried = true;
+        syncCategoriesFromProducts(true);
     }
-    window.filterSectionProducts = renderSectionProducts;
-    window.toggleSectionProduct = function (id) {
-        var i = sectionSelectedIds.indexOf(id);
-        if (i >= 0) sectionSelectedIds.splice(i, 1); else sectionSelectedIds.push(id);
-        renderSectionProducts();
-    };
 
-    window.saveSection = function () {
+    window.openCategoryModal = function (cat) {
         if (!requireWrite('sections')) return;
-        var id = document.getElementById('sectionId').value;
-        var type = document.getElementById('sectionType').value;
+        document.getElementById('categoryModalTitle').textContent = cat ? 'تعديل الفئة' : 'إضافة فئة';
+        document.getElementById('categoryId').value = cat ? cat.id : '';
+        document.getElementById('categoryName').value = cat ? cat.name : '';
+        document.getElementById('categoryImage').value = cat ? (cat.image || '') : '';
+        document.getElementById('categoryImageFile').value = '';
+        document.getElementById('categoryDesc').value = cat ? (cat.description || '') : '';
+        openM('categoryModal');
+    };
+    window.editCategory = function (id) { var c = extCategories.filter(function (x) { return x.id === id; })[0]; if (c) window.openCategoryModal(c); };
+
+    window.saveCategory = function () {
+        if (!requireWrite('sections')) return;
+        var id = document.getElementById('categoryId').value;
+        var existing = id ? extCategories.filter(function (x) { return x.id === id; })[0] : null;
+        var oldName = existing ? existing.name : '';
         var data = {
-            title: document.getElementById('sectionTitle').value.trim(),
-            subtitle: document.getElementById('sectionSubtitle').value.trim(),
-            layout: document.getElementById('sectionLayout').value,
-            type: type,
-            value: (type === 'category' || type === 'brand' || type === 'status') ? document.getElementById('sectionValue').value : '',
-            productIds: type === 'manual' ? sectionSelectedIds.slice() : [],
-            cover: document.getElementById('sectionCover').value.trim(),
-            limit: parseInt(document.getElementById('sectionLimit').value, 10) || 12,
-            visible: document.getElementById('sectionVisible').checked
+            name: document.getElementById('categoryName').value.trim(),
+            image: document.getElementById('categoryImage').value.trim(),
+            description: document.getElementById('categoryDesc').value.trim()
         };
-        if (!data.title) return alert('أدخلي عنوان القسم');
+        if (!data.name) return alert('أدخلي اسم الفئة');
         setAdminLoading(true);
-        var file = document.getElementById('sectionCoverFile').files[0];
-        var pre = file ? uploadToImgbb(file).then(function (url) { data.cover = url; }) : Promise.resolve();
+        var file = document.getElementById('categoryImageFile').files[0];
+        var pre = file ? uploadToImgbb(file).then(function (url) { data.image = url; }) : Promise.resolve();
         pre.then(function () {
-            if (id) return db.collection('sections').doc(id).update(data);
-            data.order = extSections.length;
+            if (id) {
+                return db.collection('categories').doc(id).update(data).then(function () {
+                    return renameProductsCategory(oldName, data.name);
+                });
+            }
+            data.order = extCategories.length;
             data.createdAt = new Date().toISOString();
-            return db.collection('sections').add(data);
+            return db.collection('categories').add(data);
         }).then(function () {
-            setAdminLoading(false); setAdminStatus('تم حفظ القسم.', 'success'); closeModal('sectionModal');
-        }).catch(function (e) { setAdminLoading(false); setAdminStatus('تعذر حفظ القسم: ' + e.message, 'error'); });
+            setAdminLoading(false); setAdminStatus('تم حفظ الفئة.', 'success'); closeModal('categoryModal');
+        }).catch(function (e) { setAdminLoading(false); setAdminStatus('تعذّر حفظ الفئة: ' + e.message, 'error'); });
     };
-    window.deleteSection = function (id) {
+
+    function renameProductsCategory(oldName, newName) {
+        if (!oldName || oldName === newName) return Promise.resolve();
+        var affected = (window.products || []).filter(function (p) { return p.category === oldName; });
+        if (!affected.length) return Promise.resolve();
+        var batch = db.batch();
+        affected.forEach(function (p) { batch.update(db.collection('products').doc(String(p.id)), { category: newName }); });
+        return batch.commit();
+    }
+
+    window.deleteCategory = function (id) {
         if (!requireWrite('sections')) return;
-        if (!confirm('حذف هذا القسم؟')) return;
-        db.collection('sections').doc(id).delete().then(function () { setAdminStatus('تم حذف القسم.', 'success'); });
+        if (!confirm('حذف هذه الفئة؟ (لن تُحذف المنتجات المرتبطة بها)')) return;
+        db.collection('categories').doc(id).delete().then(function () { setAdminStatus('تم حذف الفئة.', 'success'); });
     };
-    window.toggleSectionVisible = function (id) {
-        if (!requireWrite('sections')) return;
-        var s = extSections.filter(function (x) { return x.id === id; })[0]; if (!s) return;
-        db.collection('sections').doc(id).update({ visible: s.visible === false });
-    };
-    window.moveSection = function (id, dir) {
+
+    window.moveCategory = function (id, dir) {
         if (!requireWrite('sections')) return;
         var idx = -1;
-        for (var i = 0; i < extSections.length; i++) if (extSections[i].id === id) idx = i;
+        for (var i = 0; i < extCategories.length; i++) if (extCategories[i].id === id) idx = i;
         var swap = idx + dir;
-        if (idx < 0 || swap < 0 || swap >= extSections.length) return;
-        var a = extSections[idx], b = extSections[swap];
+        if (idx < 0 || swap < 0 || swap >= extCategories.length) return;
+        var a = extCategories[idx], b = extCategories[swap];
         var batch = db.batch();
-        batch.update(db.collection('sections').doc(a.id), { order: swap });
-        batch.update(db.collection('sections').doc(b.id), { order: idx });
+        batch.update(db.collection('categories').doc(a.id), { order: swap });
+        batch.update(db.collection('categories').doc(b.id), { order: idx });
         batch.commit();
     };
 
@@ -624,5 +635,5 @@
     function escJs(s) { return String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
     function emptyCard(title, sub) { return '<div class="ext-empty"><h4>' + esc(title) + '</h4><p>' + esc(sub) + '</p></div>'; }
 
-    window.renderSectionsList = renderSectionsList;
+    /* renderCategoriesList is exported directly on window above */
 })();

@@ -151,7 +151,7 @@ function switchTab(tab, button) {
     if (button) button.classList.add('active');
     if (tab === 'dashboard') renderDashboard();
     if (tab === 'orders') renderOrdersTable();
-    if (tab === 'sections' && window.renderSectionsList) window.renderSectionsList();
+    if (tab === 'sections' && window.renderCategoriesList) window.renderCategoriesList();
     if (tab === 'customers' && window.renderCustomersTable) window.renderCustomersTable();
     if (tab === 'tickets' && window.renderTicketsList) window.renderTicketsList();
     if (tab === 'loyalty' && window.loadLoyaltyForm) window.loadLoyaltyForm();

@@ -14,6 +14,7 @@
         'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=1200&q=80'
     ];
     var sectionsData = null; // null = not loaded yet
+    var categoriesData = null;
 
     document.addEventListener('DOMContentLoaded', function () {
         if (!window.db) return;
@@ -26,6 +27,11 @@
             });
             render();
         }, function () { sectionsData = []; render(); });
+        window.db.collection('categories').orderBy('order', 'asc').onSnapshot(function (snap) {
+            categoriesData = [];
+            snap.forEach(function (d) { var c = d.data(); c.id = d.id; categoriesData.push(c); });
+            render();
+        }, function () { categoriesData = []; render(); });
     });
 
     // called by script.js renderStorefront() once products are ready
@@ -41,10 +47,10 @@
         var container = document.createElement('div');
         container.className = 'container';
 
-        var chips = buildCategoryChips(products);
-        if (chips) container.appendChild(chips);
-
         var rendered = 0;
+        var showcase = buildCategoryShowcase(products);
+        if (showcase) { container.appendChild(showcase); rendered++; }
+
         defs.forEach(function (section, i) {
             var items = resolveProducts(section, products);
             if (!items.length) return;
@@ -73,18 +79,44 @@
         if (window.shSyncWishHearts) window.shSyncWishHearts();
     }
 
-    function buildCategoryChips(products) {
-        var cats = [];
-        products.forEach(function (p) { if (p.category && cats.indexOf(p.category) < 0) cats.push(p.category); });
-        if (cats.length < 2) return null;
-        var wrap = document.createElement('div');
-        wrap.className = 'cat-chips reveal';
-        var html = '<a class="cat-chip cat-chip-all" href="collection.html?type=all&title=' + encodeURIComponent('كل المنتجات') + '">كل المنتجات</a>';
-        cats.slice(0, 10).forEach(function (c) {
-            html += '<a class="cat-chip" href="collection.html?type=category&value=' + encodeURIComponent(c) + '&title=' + encodeURIComponent(c) + '">' + esc(c) + '</a>';
+    function getShowcaseCats(products) {
+        if (categoriesData && categoriesData.length) {
+            return categoriesData.map(function (c, i) {
+                return { name: c.name, image: c.image || DEFAULT_COVERS[i % DEFAULT_COVERS.length], description: c.description || '' };
+            });
+        }
+        var seen = {}, out = [];
+        products.forEach(function (p) {
+            if (p.category && !seen[p.category]) { seen[p.category] = 1; out.push({ name: p.category, image: DEFAULT_COVERS[out.length % DEFAULT_COVERS.length], description: '' }); }
         });
-        wrap.innerHTML = html;
-        return wrap;
+        return out;
+    }
+
+    function buildCategoryShowcase(products) {
+        var cats = getShowcaseCats(products);
+        if (!cats.length) return null;
+        var sec = document.createElement('section');
+        sec.className = 'home-sec cat-showcase reveal';
+        var head = '<div class="home-sec-head"><div class="home-sec-heading">' +
+            '<h2 class="home-sec-title">تسوّقي حسب الفئة</h2>' +
+            '<p class="home-sec-sub">اكتشفي تشكيلاتنا حسب نوع العناية</p></div></div>';
+        var arrow = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>';
+        var grid = '<div class="cat-showcase-grid">';
+        cats.forEach(function (c, i) {
+            var href = 'collection.html?type=category&value=' + encodeURIComponent(c.name) + '&title=' + encodeURIComponent(c.name);
+            var count = products.filter(function (p) { return p.category === c.name; }).length;
+            grid += '<a class="cat-card" href="' + href + '" style="animation-delay:' + (i * 45) + 'ms" aria-label="' + esc(c.name) + '">' +
+                '<div class="cat-card-media"><img src="' + esc(c.image) + '" alt="' + esc(c.name) + '" loading="lazy"></div>' +
+                '<span class="cat-card-veil" aria-hidden="true"></span>' +
+                '<div class="cat-card-body">' +
+                    '<h3 class="cat-card-name">' + esc(c.name) + '</h3>' +
+                    (count ? '<span class="cat-card-count">' + count + ' منتج</span>' : '') +
+                    '<span class="cat-card-cta">استكشفي الكل ' + arrow + '</span>' +
+                '</div></a>';
+        });
+        grid += '</div>';
+        sec.innerHTML = head + grid;
+        return sec;
     }
 
     function buildDefaults(products) {
@@ -93,11 +125,6 @@
         if (hasStatus('bestseller')) defs.push({ title: 'الأكثر مبيعاً', subtitle: 'اختيارات عميلاتنا المفضّلة', type: 'status', value: 'bestseller', layout: 'spotlight', cover: DEFAULT_COVERS[0], limit: 8 });
         defs.push({ title: 'وصل حديثاً', subtitle: 'أحدث ما أضفناه لك', type: 'new', layout: 'rail', limit: 12 });
         if (hasStatus('special')) defs.push({ title: 'لمسة مميّزة', subtitle: 'منتجات منتقاة بعناية', type: 'status', value: 'special', layout: 'rail', cover: DEFAULT_COVERS[1], limit: 12 });
-        var cats = [];
-        products.forEach(function (p) { if (p.category && cats.indexOf(p.category) < 0) cats.push(p.category); });
-        cats.forEach(function (cat, idx) {
-            defs.push({ title: cat, subtitle: 'تشكيلة ' + cat, type: 'category', value: cat, layout: 'rail', cover: DEFAULT_COVERS[(idx + 2) % DEFAULT_COVERS.length], limit: 12 });
-        });
         return defs;
     }
 

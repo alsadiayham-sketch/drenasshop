@@ -11,6 +11,29 @@ var DEFAULT_SITE_SETTINGS = {
     deliveryCosts: { westbank: 20, jerusalem: 30, inside: 70 }
 };
 
+var SH_DEFAULT_CATEGORY_COVERS = [
+    'https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=1000&q=80',
+    'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=1000&q=80',
+    'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=1000&q=80',
+    'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=1000&q=80',
+    'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=1000&q=80',
+    'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&w=1000&q=80',
+    'https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=1000&q=80',
+    'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1000&q=80'
+];
+
+function normalizeCategory(raw, idx) {
+    var c = raw || {};
+    var covers = SH_DEFAULT_CATEGORY_COVERS;
+    return {
+        id: c.id || '',
+        name: String(c.name || '').trim(),
+        image: String(c.image || '').trim() || covers[(idx || 0) % covers.length],
+        description: String(c.description || '').trim(),
+        order: Number(c.order) || 0
+    };
+}
+
 var BRANDS_DATA = [{ name: 'AXIS-Y', logo: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=100&h=100&fit=crop' }, { name: 'Beauty of Joseon', logo: 'https://images.unsplash.com/photo-1570194065650-d99fb4ee7cde?w=100&h=100&fit=crop' }, { name: 'I LOVE', logo: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=100&h=100&fit=crop' }, { name: 'Neat', logo: 'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=100&h=100&fit=crop' }, { name: 'VT Cosmetics', logo: 'https://images.unsplash.com/photo-1612817288484-6f916006741a?w=100&h=100&fit=crop' }, { name: 'Hoppa', logo: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=100&h=100&fit=crop' }, { name: 'SESDERMA', logo: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=100&h=100&fit=crop' }, { name: 'BioBalance', logo: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=100&h=100&fit=crop' }];
 
 function normalizeSizeEntry(entry) {
